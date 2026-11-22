@@ -1,13 +1,17 @@
-# news-image-20261121 — rebuild round 5 (leaderboard-driven revision)
-# "Saturday 21 November 2026" — one-page newspaper, 37 stories.
+# news-image-20261121 — rebuild round 9 (font weight)
+# "Saturday 21 November 2026" — one-page newspaper, 48 stories.
 # Python 3 stdlib only. No network. Deterministic: two runs are byte-identical.
 # Output: /output/entry.png (and out/entry.png next to this script, same bytes).
 #
 # Design (verified by looking at the three dev-board leaders 22 Nov 2026):
 #  - bold anti-aliased classic serif for masthead + headlines (sentence case),
+#  - round 9: SERIF_BOLD — same serif, strokes thickened to match #1's
+#    Times-Bold stem thickness (masthead stem mode 12 px at cap ~60 px;
+#    see _thicken_prim) — used for masthead, number strip, hero + medium
+#    titles only; body/ALSO ON/DATE CHECK stay on the regular SERIF.
 #  - short coloured kicker banners (white caps sans on red/blue) on every card,
 #  - 3 hero + 10 medium cards, scenes strictly ABOVE the title, never touching it,
-#  - 37 stories total, ALSO ON in two columns, DATE CHECK footer.
+#  - 48 stories total, ALSO ON in three columns, DATE CHECK footer.
 # Story facts, numbers and sources come only from GO-REPORT.md /
 # research-21nov-fresh.md (verified 22 Nov 2026) — plus, in round 6, the
 # Bahrain/Hormuz-attack story from AFP reports verified by the coordinator
@@ -638,13 +642,82 @@ def _render_glyph(font, cell, base, ch, size):
 SERIF_F = (SERIF, SERIF_CELL, SERIF_BASE)
 SANS_F = (SANS, SANS_CELL, SANS_BASE)
 
-def text_width(text, font, size, track=0.0):
+# --- round 9: heavier weight of the same serif, to match #1 (akun-fft) ---
+# Measured 22 Nov 2026 (pixel scans, masthead band): #1 stem mode 12 px at
+# cap ~60 px, ours mode 8-9 px. Our font is HIGH contrast (verticals 20 u
+# but diagonals 13-15 u, arcs 11 u, horizontals 7 u); #1 (Times Bold) is
+# LOW contrast (all strokes ~12 px at cap 60). So thicken the THIN strokes
+# toward Times-Bold proportions instead of scaling everything: verticals
+# stay ~21 u, horizontals 7 -> 13 u, diagonals 13-15 -> 19 u, rings/arcs
+# 11 -> 16 u, dots r 6-7 -> 9. Counters stay open (smallest inner radius
+# after thickening is the '%' ring at 5.5 u; '%' never appears in a bold
+# title). Optical advances are recomputed from the ink by _glyph_optics,
+# so spacing adapts and the r8 "Vers tappen" fix is preserved.
+def _thicken_prim(p):
+    k = p[0]
+    if k == 'R':
+        _, x0, y0, x1, y1 = p
+        w, h = x1 - x0, y1 - y0
+        if w <= h:  # vertical stem: thicken horizontally to 21 u
+            nw = max(w, 21)
+            cx = (x0 + x1) / 2.0
+            return ('R', cx - nw / 2.0, y0, cx + nw / 2.0, y1)
+        nh = max(h, 13)  # horizontal bar: thicken vertically to 13 u
+        cy = (y0 + y1) / 2.0
+        return ('R', x0, cy - nh / 2.0, x1, cy + nh / 2.0)
+    if k == 'L':
+        _, x0, y0, x1, y1, w = p
+        return ('L', x0, y0, x1, y1, max(w, 19))
+    if k == 'G':
+        _, cx, cy, ro, ri = p
+        mid = (ro + ri) / 2.0
+        nt = max(ro - ri, 16)
+        return ('G', cx, cy, mid + nt / 2.0, mid - nt / 2.0)
+    if k == 'A':
+        _, cx, cy, ro, ri, a0, a1 = p
+        mid = (ro + ri) / 2.0
+        nt = max(ro - ri, 16)
+        return ('A', cx, cy, mid + nt / 2.0, mid - nt / 2.0, a0, a1)
+    if k == 'D':
+        _, cx, cy, r = p
+        return ('D', cx, cy, max(r, 9))
+    return p
+
+SERIF_BOLD = {ch: (adv, [_thicken_prim(p) for p in prims])
+              for ch, (adv, prims) in SERIF.items()}
+SERIF_BOLD_F = (SERIF_BOLD, SERIF_CELL, SERIF_BASE)
+
+_OPT_CACHE = {}
+
+def _glyph_optics(font, ch, size):
+    # Optical advance: ink width + uniform side bearings. The serif
+    # glyphs' nominal advances are ragged (s: +11 trail, p: +12, l: +17
+    # lead, S: +14/+12, O: -10 lead), which splits words visually
+    # ("Vers tappen", a hole before 'l' in "pole"). Returns
+    # (cmin, cmax, opt_adv_px); blank glyphs give (None, None, nominal).
     d, _, base = font
-    s = size / float(base)
+    key = (id(font), ch, round(size, 2))
+    hit = _OPT_CACHE.get(key)
+    if hit is not None:
+        return hit
+    mask, mw, mh, fx0, fy0, adv = _render_glyph(d, 0, base, ch, size)
+    # Ink span at half coverage: edge pixels with faint coverage are
+    # invisible, but counting them (mask > 0) inflates every glyph by
+    # ~1 px, which dominates at small sizes.
+    cols = [x for y in range(mh) for x in range(mw) if mask[y * mw + x] > 127]
+    if not cols:
+        res = (None, None, adv)
+    else:
+        cmin, cmax = min(cols), max(cols)
+        lb = size * 0.03
+        res = (cmin, cmax, (cmax - cmin + 1) + 2.0 * lb)
+    _OPT_CACHE[key] = res
+    return res
+
+def text_width(text, font, size, track=0.0):
     w = 0.0
     for ch in text:
-        adv = d.get(ch, d.get(' ', (28, [])))[0]
-        w += adv * s + track
+        w += _glyph_optics(font, ch, size)[2] + track
     return w - track if text else 0.0
 
 def draw_text(cv, x, y, text, font, size, col, align='l', slant=0.0, track=0.0):
@@ -660,8 +733,10 @@ def draw_text(cv, x, y, text, font, size, col, align='l', slant=0.0, track=0.0):
     base_y = int(round(y))
     for ch in text:
         mask, mw, mh, fx0, fy0, adv = _render_glyph(d, 0, base, ch, size)
-        if mw and mh:
-            ox = int(round(pen)) + fx0
+        cmin, cmax, oadv = _glyph_optics(font, ch, size)
+        if mw and mh and cmin is not None:
+            lb = size * 0.03
+            ox = int(round(pen + lb)) - cmin
             oy = base_y - int(round(base * s)) + fy0
             for my in range(mh):
                 cy = oy + my
@@ -673,7 +748,7 @@ def draw_text(cv, x, y, text, font, size, col, align='l', slant=0.0, track=0.0):
                     a = mask[row + mx]
                     if a:
                         cv.blend(ox + mx + dxr, cy, col, a)
-        pen += adv + track
+        pen += oadv + track
     return pen
 
 def wrap_text(text, font, size, max_w, track=0.0):
@@ -712,8 +787,11 @@ def _band(cv, x, y, w, h, bg):
     cv.rect(x, y, x + w, y + h, bg)
 
 def scene_cop31(cv, x, y, w, h):
+    # Conference hall with depth: back wall + flags, projection screen
+    # with the draft, desks, a podium with a speaker, and delegates in
+    # the foreground (round 8: the old flat desk rows read as wallpaper).
     _band(cv, x, y, w, h, (222, 228, 232))
-    # hall: back wall, rows of desks, flags, wall clock
+    # back wall + flag windows
     cv.rect(x, y, x + w, y + 26, (178, 190, 200))
     cv.rect(x, y + 26, x + w, y + 30, (120, 132, 142))
     for i in range(5):
@@ -722,22 +800,38 @@ def scene_cop31(cv, x, y, w, h):
         cv.rect(fx + 4, y + 11, fx + 12, y + 19, (185, 28, 28))
         cv.rect(fx + 16, y + 11, fx + 24, y + 19, (29, 78, 216))
         cv.rect(fx + 27, y + 11, fx + 31, y + 19, (21, 128, 61))
-    # desks
-    for r in range(3):
-        dy = y + 44 + r * 26
-        cv.rect(x + 10, dy, x + w - 10, dy + 12, (146, 118, 84))
-        cv.rect(x + 10, dy, x + w - 10, dy + 3, (120, 96, 64))
-        for i in range(6):
-            px = x + 22 + i * 48
+    # projection screen (right): draft document, red 80-paras bar
+    sx0, sy0, sx1, sy1 = x + w - 112, y + 36, x + w - 8, y + 90
+    cv.rect(sx0, sy0, sx1, sy1, (16, 28, 40))
+    cv.rect(sx0 + 3, sy0 + 3, sx1 - 3, sy1 - 3, (250, 250, 248))
+    for i, ly in enumerate((sy0 + 12, sy0 + 21, sy0 + 30)):
+        cv.rect(sx0 + 10, ly, sx1 - 10 - (18 if i == 2 else 0), ly + 3,
+                (150, 158, 168))
+    cv.rect(sx0 + 10, sy0 + 40, sx0 + 52, sy0 + 46, (185, 28, 28))
+    # desks (left, two rows)
+    for r in range(2):
+        dy = y + 48 + r * 26
+        cv.rect(x + 10, dy, x + 190, dy + 12, (146, 118, 84))
+        cv.rect(x + 10, dy, x + 190, dy + 3, (120, 96, 64))
+        for i in range(4):
+            px = x + 28 + i * 44
             cv.disc(px, dy - 6, 5, (60, 60, 60))
             cv.rect(px - 4, dy - 10, px + 4, dy - 2, (200, 200, 200))
-    # wall clock, right
-    cx, cy = x + w - 44, y + 62
-    cv.disc(cx, cy, 26, (250, 250, 248))
-    cv.ring(cx, cy, 26, 23, INK)
-    cv.line(cx, cy, cx, cy - 16, INK, 3)
-    cv.line(cx, cy, cx + 12, cy + 6, INK, 3)
-    cv.disc(cx, cy, 3, RED)
+    # podium + speaker (centre)
+    px0, px1 = x + 150, x + 202
+    cv.poly([(px0, y + h), (px0 + 8, y + 88), (px1 - 8, y + 88),
+             (px1, y + h)], (96, 72, 48))
+    cv.rect(px0 + 8, y + 88, px1 - 8, y + 94, (120, 96, 64))
+    cv.disc((px0 + px1) // 2, y + 76, 9, (210, 180, 150))
+    cv.poly([((px0 + px1) // 2 - 14, y + 88), ((px0 + px1) // 2 + 14, y + 88),
+             ((px0 + px1) // 2 + 10, y + 82), ((px0 + px1) // 2 - 10, y + 82)],
+            (40, 48, 60))
+    cv.line(px1 - 6, y + 88, px1 + 2, y + 70, INK, 2)
+    cv.disc(px1 + 2, y + 70, 3, INK)
+    # delegates in the foreground (bottom strip)
+    for dx in (x + 26, x + 74, x + 252, x + 300):
+        cv.disc(dx, y + h - 14, 8, (52, 52, 52))
+        cv.rect(dx - 13, y + h - 8, dx + 13, y + h, (52, 52, 52))
 
 def scene_riyadh(cv, x, y, w, h):
     _band(cv, x, y, w, h, NIGHT)
@@ -841,11 +935,27 @@ def scene_bahrain(cv, x, y, w, h):
     cv.poly([(x + w * 0.52, y), (x + w, y), (x + w, y + h * 0.34),
              (x + w * 0.72, y + h * 0.30), (x + w * 0.58, y + h * 0.16)],
             (210, 190, 140))
-    # Bahrain island + pin
-    bx, by = int(x + w * 0.40), int(y + h * 0.46)
-    ellipse(cv, bx, by, 7, 5, (232, 217, 176))
-    cv.disc(bx, by, 5, RED)
-    cv.ring(bx, by, 5, 3, (255, 255, 255))
+    # Qatar peninsula (west shore, below Bahrain)
+    ellipse(cv, int(x + w * 0.335), int(y + h * 0.63), 10, 6, (232, 217, 176))
+    # Oman / Musandam (bottom right) + Khasab
+    cv.poly([(x + w * 0.74, y + h), (x + w * 0.80, y + h * 0.74),
+             (x + w * 0.92, y + h * 0.70), (x + w, y + h * 0.76),
+             (x + w, y + h), (x + w * 0.74, y + h)], (232, 217, 176))
+    kx, ky = int(x + w * 0.83), int(y + h * 0.72)
+    cv.disc(kx, ky, 3, RED)
+    cv.ring(kx, ky, 3, 2, (255, 255, 255))
+    draw_text(cv, int(x + w * 0.83), int(y + h * 0.97), "KHASAB", SANS_F, 7,
+              INK_SOFT, align='c')
+    # wave chevrons in the open sea (middle right)
+    for wx, wy in ((0.58, 0.30), (0.70, 0.38), (0.62, 0.44), (0.76, 0.28)):
+        px, py = int(x + w * wx), int(y + h * wy)
+        cv.line(px - 7, py, px, py - 4, (255, 255, 255), 2)
+        cv.line(px, py - 4, px + 7, py, (255, 255, 255), 2)
+    # small patrol boat, upper sea
+    pbx, pby = int(x + w * 0.60), int(y + h * 0.22)
+    cv.poly([(pbx - 12, pby), (pbx + 12, pby), (pbx + 8, pby + 5),
+             (pbx - 8, pby + 5)], (40, 48, 60))
+    cv.rect(pbx - 3, pby - 6, pbx + 4, pby, (90, 96, 104))
     # dashed tanker route through the strait
     for t in range(0, 11):
         fx = t / 10.0
@@ -1109,43 +1219,54 @@ MEDIUM = [
          summary="Rahul 124* at tea, day three of the first Test; India 344 for 2.",
          scene=scene_cricket),
 ]
-# ALSO ON: 24 items, two columns of 12. Round 6: Canberra (no. 10) moved
-# here as no. 18; London rugby (48) cut; Riyadh (old no. 2) is medium no. 10;
-# Bahrain is the new hero 1. Cut from the research file (r5 numbers):
-# 24 Canada trial, 26 Sejong derail, 30 Akvan rain, 31 Myanmar,
-# 33 Cummins, 34 Russell, 42 Sozcu TV, 45 France UN meeting, 46 Estonia,
-# 47 drone output, 48 London rugby, 49 Islamabad sentence, 50 Rohingya pact.
+# ALSO ON: 35 items, three columns of 12/12/11. Round 8: restored the 11
+# strongest stories cut in r5 (PLN deals, Canada trial, Sejong derail,
+# Akvan rain, Myanmar, Cummins, Sozcu TV, France UN meeting, drone output,
+# Islamabad, Rohingya pact); still cut: Russell (34), Estonia (46),
+# London rugby (48). Renumbered sequentially 14..48 by display order.
+# Longest items shortened (facts kept) to fit the 3-column width.
 ALSO_ON = [
     (14, "Kryvyi Rih: double-tap strike kills 2, injures 60", "AP"),
     (15, "Copenhagen: Denmark says it foiled a Russian plot", "AJ"),
     (16, "Antalya: EU warns COP31 risks a \u201cfossil summit\u201d", "AFP"),
     (17, "Antalya: Panama threatens to block climate text", "AJ"),
-    (18, "Canberra: Australia and China agree AI talks", "ABC"),
-    (19, "Yemen: Houthis threaten Jeddah and Red Sea ports", "AJ"),
-    (20, "Washington: Vance says Iran strikes were Trump\u2019s call", "Reuters"),
-    (21, "Texas: execution of a man of 70 takes 63 minutes", "ABC"),
-    (22, "Los Angeles: jury convicts man of starting Palisades fire", "ABC"),
-    (23, "Missouri: judge approves $7.25bn Roundup settlement", "AFP"),
-    (25, "Pyongyang: Kim tours factories after no Trump meeting", "AFP"),
-    (27, "Taipei: budget and cash payout are passed", "TT"),
-    (28, "Bangkok: six-point plan on arsenic in two rivers", "Nation"),
-    (29, "New Delhi: Pakistani minister joins SCO forum in India", "Dawn"),
-    (32, "Port Louis: African ratings agency talks to 15 states", "AJ"),
+    (18, "Antalya: Indonesia PLN signs clean-power deals", "Antara"),
+    (19, "Canberra: Australia and China agree AI talks", "ABC"),
+    (20, "Yemen: Houthis threaten Jeddah and Red Sea ports", "AJ"),
+    (21, "Washington: Vance says Iran strikes were Trump\u2019s call", "Reuters"),
+    (22, "Texas: execution of a man of 70 takes 63 minutes", "ABC"),
+    (23, "Los Angeles: jury convicts man of starting Palisades fire", "ABC"),
+    (24, "Missouri: judge approves $7.25bn Roundup settlement", "AFP"),
+    (25, "Vancouver: Canada rests defence in youth climate trial", "AFP"),
+    (26, "Pyongyang: Kim tours factories after no Trump meeting", "AFP"),
+    (27, "Sejong: freight train derails; no one hurt", "Korea Herald"),
+    (28, "Taipei: budget and cash payout are passed", "TT"),
+    (29, "Bangkok: six-point plan on arsenic in two rivers", "Nation"),
+    (30, "New Delhi: Pakistani minister joins SCO forum in India", "Dawn"),
+    (31, "Eastern India: rain alerts as Akvan remnants move inland", "ETV"),
+    (32, "Myanmar: rights groups urge sanctions after court ruling", "AP"),
+    (33, "Port Louis: African ratings agency talks to 15 states", "AJ"),
+    (34, "Melbourne: Cummins keeps the Australian captaincy", "ABC"),
     (35, "Mexico: \u201cEl Chapo Isidro\u201d captured in Sinaloa", "AP"),
-    (36, "Baltic: Russian cargo ship Sparta II on fire after drone hit", "Reuters"),
-    (37, "Washington: Trump weighs new strikes on Iran, officials say", "NYT"),
+    (36, "Baltic: Russian ship Sparta II on fire after drone hit", "Reuters"),
+    (37, "Washington: Trump weighs new Iran strikes, officials say", "NYT"),
     (38, "Paris: French police sentenced over Zecler beating", "AP"),
-    (39, "Geneva: UN talks agree to keep working on AI weapons rules", "AP"),
+    (39, "Geneva: UN talks to keep working on AI weapons rules", "AP"),
     (40, "Port-au-Prince: Salvadoran troops fight gangs in Haiti", "AP"),
     (41, "Southern Ethiopia: 700,000 displaced", "AP"),
+    (42, "Istanbul: Turkey takes control of Sozcu TV", "Reuters"),
     (43, "Gaza: at least 4 killed in Israeli strikes amid truce", "AP"),
     (44, "Baghdad: fire at Iraqi power plant kills 4", "AP"),
+    (45, "Paris: France seeks UN Council meeting on Kyiv attacks", "AFP"),
+    (46, "Berlin: German-Ukrainian firms raise drone output 5x", "Reuters"),
+    (47, "Islamabad: death sentence over \u201csacrilegious\u201d posts", "AP"),
+    (48, "Kuala Lumpur: Malaysia-Turkey pact for 10,000 Rohingya", "AP"),
 ]
 NUMBERS = [("13", "COP31 DAY"), ("2", "TANKERS HORMUZ"), ("6.7", "PERU QUAKE"),
            ("146", "SAFE IN DAVAO"), ("$58,960", "BITCOIN"), ("124*", "RAHUL")]
-REGIONS = [("EUROPE", "Europe", 7), ("MIDDLE EAST", "Middle East", 7),
-           ("AMERICAS", "Americas", 11), ("ASIA", "Asia", 6),
-           ("AFRICA", "Africa", 2), ("OCEANIA", "Oceania", 2),
+REGIONS = [("EUROPE", "Europe", 10), ("MIDDLE EAST", "Middle East", 7),
+           ("AMERICAS", "Americas", 12), ("ASIA", "Asia", 12),
+           ("AFRICA", "Africa", 2), ("OCEANIA", "Oceania", 3),
            ("GLOBAL", "Global", 2)]
 DATE_CHECK = ("Not 21 Nov, so left out: 20 Nov \u2014 Wall Street falls; Kyiv bridge "
               "strikes; missiles in Poland; UK\u2013EU deal; Cyclone Akvan lands; "
@@ -1200,15 +1321,15 @@ def build():
     cv = Canvas(W, H, PAPER)
     # ---- top bar
     draw_text(cv, MX, 13, "THE WORLD IN ONE DAY", SANS_F, 10, INK)
-    draw_text(cv, W // 2, 13, "37 STORIES \u00b7 7 REGIONS", SANS_F, 10, RED,
+    draw_text(cv, W // 2, 13, "48 STORIES \u00b7 7 REGIONS", SANS_F, 10, RED,
               align='c')
     draw_text(cv, W - MX, 13, "ALL TIMES UTC", SANS_F, 10, INK, align='r')
     cv.hline(MX, W - MX, 18, RULE, 2)
     # ---- masthead
     size = 60
-    while text_width("Saturday 21 November 2026", SERIF_F, size) > W - 2 * MX:
+    while text_width("Saturday 21 November 2026", SERIF_BOLD_F, size) > W - 2 * MX:
         size -= 2
-    draw_text(cv, W // 2, 86, "Saturday 21 November 2026", SERIF_F, size, INK,
+    draw_text(cv, W // 2, 86, "Saturday 21 November 2026", SERIF_BOLD_F, size, INK,
               align='c')
     cv.hline(MX, W - MX, 94, RULE, 2)
     # ---- subhead (faux italic serif)
@@ -1224,7 +1345,7 @@ def build():
         cx = MX + cellw * i
         if i:
             cv.vline(int(cx), y0 + 4, y1 - 4, GREY, 1)
-        draw_text(cv, cx + cellw / 2, y0 + 30, num, SERIF_F, 30, RED, align='c')
+        draw_text(cv, cx + cellw / 2, y0 + 30, num, SERIF_BOLD_F, 30, RED, align='c')
         draw_text(cv, cx + cellw / 2, y0 + 45, lab, SANS_F, 10, INK_SOFT,
                   align='c')
     cv.hline(MX, W - MX, y1, RULE, 2)
@@ -1240,7 +1361,11 @@ def build():
     for label, cname, n in REGIONS:
         sw = avail * n / tot
         cv.rect(int(rx), y0, int(rx + sw), y1, REGION_COLOR[cname])
-        draw_text(cv, int(rx) + 4, y0 + 12, "%s %d" % (label, n), SANS_F, 8,
+        txt = "%s %d" % (label, n)
+        fs = 8.0
+        while fs > 6.0 and text_width(txt, SANS_F, fs) > sw - 5:
+            fs -= 0.5
+        draw_text(cv, int(rx) + 3, y0 + 12, txt, SANS_F, fs,
                   (255, 255, 255))
         rx += sw
     cv.hline(MX, W - MX, y1, RULE, 2)
@@ -1269,9 +1394,9 @@ def build():
         pw = int(text_width(ptxt, SANS_F, 9) + 10)
         status_pill(cv, x + hw - 8 - pw, hy0 + 138, st['status'], SANS_F, 9)
         # title (2 lines max), summary (2 lines), source
-        lines, tsize = fit_lines(st['title'], SERIF_F, 20, 16, hw - 16)
+        lines, tsize = fit_lines(st['title'], SERIF_BOLD_F, 20, 16, hw - 16)
         t_y = hy0 + 180 + max(0, 2 - len(lines)) * tsize * 1.28 / 2
-        draw_lines(cv, x + 8, t_y, lines, SERIF_F, tsize, INK,
+        draw_lines(cv, x + 8, t_y, lines, SERIF_BOLD_F, tsize, INK,
                    lh=tsize * 1.28)
         sl = wrap_text(st['summary'], SERIF_F, 11.5, hw - 16)
         draw_lines(cv, x + 8, hy0 + 226, sl[:2], SERIF_F, 11.5, INK_SOFT, lh=14)
@@ -1297,32 +1422,32 @@ def build():
             # status lives in the source line below the summary, not here:
             # the strip is too narrow for kicker + status without overlap.
             st['scene'](cv, x + 1, y0 + 17, mw - 2, 56)
-            lines, tsize = fit_lines(st['title'], SERIF_F, 17, 13, mw - 14)
+            lines, tsize = fit_lines(st['title'], SERIF_BOLD_F, 17, 13, mw - 14)
             t_y = y0 + 101 + max(0, 2 - len(lines)) * tsize * 1.28 / 2
-            draw_lines(cv, x + 7, t_y, lines, SERIF_F, tsize, INK,
+            draw_lines(cv, x + 7, t_y, lines, SERIF_BOLD_F, tsize, INK,
                        lh=tsize * 1.28)
             sl = wrap_text(st['summary'], SERIF_F, 10, mw - 14)
             draw_lines(cv, x + 7, y0 + 143, sl[:2], SERIF_F, 10, INK_SOFT,
                        lh=12)
             draw_text(cv, x + 7, y0 + 170, "%d. %s \u2014 %s" % (st['no'],
                       st['sources'], st['status']), SANS_F, 8, GREY)
-    # ---- map + ALSO ON
+    # ---- map + ALSO ON (3 columns of 12/12/11)
     y0, y1 = 810, 946
     draw_text(cv, MX, y0 + 11, "WHERE IT HAPPENED", SANS_F, 11, RED)
-    draw_text(cv, MX + 158, y0 + 11, "pins match story numbers",
-              SERIF_F, 10, INK_SOFT)
-    draw_map(cv, MX, y0 + 16, 330, y1 - y0 - 16)
-    ax = MX + 344
-    draw_text(cv, ax, y0 + 11, "ALSO ON SATURDAY 21 NOVEMBER 2026 \u2014 24 MORE",
+    draw_text(cv, MX + int(text_width("WHERE IT HAPPENED", SANS_F, 11)) + 8,
+              y0 + 11, "pins match story numbers", SERIF_F, 9, INK_SOFT)
+    draw_map(cv, MX, y0 + 16, 260, y1 - y0 - 16)
+    ax = MX + 274
+    draw_text(cv, ax, y0 + 11, "ALSO ON SATURDAY 21 NOVEMBER 2026 \u2014 35 MORE",
               SANS_F, 11, RED)
-    colw = (W - MX - ax) / 2.0
+    colw = (W - MX - ax) / 3.0
     for i, (no, txt, src) in enumerate(ALSO_ON):
         col = i // 12
         row = i % 12
         bx = ax + col * colw
         by = y0 + 15 + row * 10
         draw_text(cv, bx, by + 8, str(no), SANS_F, 8.5, RED)
-        draw_text(cv, bx + 20, by + 8, "%s (%s)" % (txt, src), SERIF_F, 8.5,
+        draw_text(cv, bx + 18, by + 8, "%s (%s)" % (txt, src), SERIF_F, 7,
                   INK, track=-0.5)
     cv.hline(MX, W - MX, y1, RULE, 2)
     # ---- DATE CHECK
