@@ -1,17 +1,30 @@
-# news-image-20261121 — rebuild round 9 (font weight)
-# "Saturday 21 November 2026" — one-page newspaper, 48 stories.
+# news-image-20261121 — rebuild round 11 (follow #9 swift-raven-16)
+# "Saturday 21 November 2026" — one-page newspaper, 38 stories.
 # Python 3 stdlib only. No network. Deterministic: two runs are byte-identical.
 # Output: /output/entry.png (and out/entry.png next to this script, same bytes).
 #
-# Design (verified by looking at the three dev-board leaders 22 Nov 2026):
+# Design (round 11 follows #9 swift-raven-16, 99.0912%, "The World in One
+# Picture", from the text spec measured off its image — no reference image
+# was opened in this round):
 #  - bold anti-aliased classic serif for masthead + headlines (sentence case),
 #  - round 9: SERIF_BOLD — same serif, strokes thickened to match #1's
 #    Times-Bold stem thickness (masthead stem mode 12 px at cap ~60 px;
 #    see _thicken_prim) — used for masthead, number strip, hero + medium
 #    titles only; body/ALSO ON/DATE CHECK stay on the regular SERIF.
-#  - short coloured kicker banners (white caps sans on red/blue) on every card,
-#  - 3 hero + 10 medium cards, scenes strictly ABOVE the title, never touching it,
-#  - 48 stories total, ALSO ON in three columns, DATE CHECK footer.
+#  - hero kickers as FULL-WIDTH coloured bands on top of the scene;
+#    medium kickers as full-width strips "N PLACE — TOPIC" + status pill,
+#    with a small key-fact pill inside each scene,
+#  - 3 hero + 12 medium cards (3 rows x 4), 15 drawn + 23 briefs = 38
+#    stories total, ALSO ON in two columns, DATE CHECK in a red frame.
+#  - round 10: bottom third rebuilt to match the dev-board leaders — ALSO ON
+#    in 2 columns at 10 px with bold place leads (30 items), map 280x176,
+#    hero 250 px / medium 162 px to make room; scenes enriched (deeper
+#    colours, more detail) and two out-of-bounds drawings fixed (Riyadh
+#    tower, bridge arch). Total cut 48 -> 43 stories to fit the big type.
+#  - round 11: 43 -> 38 stories (promote Kryvyi Rih + Canberra to medium;
+#    cut LA Palisades, Pyongyang tour, Taipei budget, Melbourne Cummins,
+#    Paris Zecler); region bar counts recomputed from the story list
+#    (r10's bar was stale: 10/7/11/9/1/3/2 vs actual 8/6/10/9/1/4/5).
 # Story facts, numbers and sources come only from GO-REPORT.md /
 # research-21nov-fresh.md (verified 22 Nov 2026) — plus, in round 6, the
 # Bahrain/Hormuz-attack story from AFP reports verified by the coordinator
@@ -791,9 +804,9 @@ def scene_cop31(cv, x, y, w, h):
     # with the draft, desks, a podium with a speaker, and delegates in
     # the foreground (round 8: the old flat desk rows read as wallpaper).
     _band(cv, x, y, w, h, (222, 228, 232))
-    # back wall + flag windows
-    cv.rect(x, y, x + w, y + 26, (178, 190, 200))
-    cv.rect(x, y + 26, x + w, y + 30, (120, 132, 142))
+    # back wall (teal, like the leaders' COP31) + flag windows
+    cv.rect(x, y, x + w, y + 26, (18, 110, 112))
+    cv.rect(x, y + 26, x + w, y + 30, (12, 80, 82))
     for i in range(5):
         fx = x + 14 + i * 62
         cv.rect(fx, y + 8, fx + 34, y + 22, (240, 240, 235))
@@ -808,7 +821,7 @@ def scene_cop31(cv, x, y, w, h):
         cv.rect(sx0 + 10, ly, sx1 - 10 - (18 if i == 2 else 0), ly + 3,
                 (150, 158, 168))
     cv.rect(sx0 + 10, sy0 + 40, sx0 + 52, sy0 + 46, (185, 28, 28))
-    # desks (left, two rows)
+    # desks (left, two rows) with coloured name placards
     for r in range(2):
         dy = y + 48 + r * 26
         cv.rect(x + 10, dy, x + 190, dy + 12, (146, 118, 84))
@@ -817,6 +830,8 @@ def scene_cop31(cv, x, y, w, h):
             px = x + 28 + i * 44
             cv.disc(px, dy - 6, 5, (60, 60, 60))
             cv.rect(px - 4, dy - 10, px + 4, dy - 2, (200, 200, 200))
+        for j, pc in enumerate(((185, 28, 28), (29, 78, 216), (21, 128, 61))):
+            cv.rect(x + 24 + j * 56, dy + 4, x + 34 + j * 56, dy + 9, pc)
     # podium + speaker (centre)
     px0, px1 = x + 150, x + 202
     cv.poly([(px0, y + h), (px0 + 8, y + 88), (px1 - 8, y + 88),
@@ -828,29 +843,39 @@ def scene_cop31(cv, x, y, w, h):
             (40, 48, 60))
     cv.line(px1 - 6, y + 88, px1 + 2, y + 70, INK, 2)
     cv.disc(px1 + 2, y + 70, 3, INK)
-    # delegates in the foreground (bottom strip)
-    for dx in (x + 26, x + 74, x + 252, x + 300):
-        cv.disc(dx, y + h - 14, 8, (52, 52, 52))
-        cv.rect(dx - 13, y + h - 8, dx + 13, y + h, (52, 52, 52))
+    # day count on the podium front (the leaders show the day number)
+    draw_text(cv, (px0 + px1) // 2, y + h - 6, "DAY 13", SANS_F, 8,
+              (255, 255, 255), align='c')
+    # delegates in the foreground (bottom strip), coloured shirts
+    for dx, dc in zip((x + 26, x + 74, x + 252, x + 300),
+                     ((185, 28, 28), (29, 78, 216), (21, 128, 61),
+                      (120, 60, 140))):
+        cv.disc(dx, y + h - 14, 8, dc)
+        cv.rect(dx - 13, y + h - 8, dx + 13, y + h, dc)
 
 def scene_riyadh(cv, x, y, w, h):
     _band(cv, x, y, w, h, NIGHT)
-    # stars
+    # stars + crescent moon
     for sx, sy in ((0.08, 0.15), (0.22, 0.08), (0.45, 0.12), (0.62, 0.07),
-                   (0.78, 0.16), (0.9, 0.09), (0.33, 0.2), (0.55, 0.22)):
+                   (0.78, 0.16), (0.9, 0.09), (0.33, 0.2), (0.55, 0.22),
+                   (0.05, 0.35), (0.68, 0.28), (0.95, 0.3)):
         cv.disc(int(x + w * sx), int(y + h * sy), 2, (240, 240, 220))
-    # skyline
+    # moon kept inside the scene (r11: at h=44 it poked onto the strip
+    # and over the status pill)
+    cv.disc(int(x + w * 0.88), int(y + h * 0.10) + 4, 7, (240, 240, 220))
+    cv.disc(int(x + w * 0.85), int(y + h * 0.08) + 4, 5, NIGHT)
+    # skyline heights scale with h: at 44 px the 50 px towers poked into
+    # the kicker strip above the scene (r11 first render)
+    u = h / 56.0
     base = y + h
-    cv.rect(x, base - 34, x + 52, base, (8, 12, 26))
-    cv.rect(x + 60, base - 52, x + 96, base, (8, 12, 26))
-    cv.rect(x + 104, base - 26, x + 150, base, (8, 12, 26))
-    cv.rect(x + 158, base - 44, x + 196, base, (8, 12, 26))
-    cv.rect(x + 204, base - 30, x + 250, base, (8, 12, 26))
-    cv.rect(x + 258, base - 58, x + 296, base, (8, 12, 26))
-    # Kingdom Centre tower (arched top)
+    cv.rect(x, base - int(34 * u), x + 52, base, (8, 12, 26))
+    cv.rect(x + 60, base - int(50 * u), x + 96, base, (8, 12, 26))
+    cv.rect(x + 104, base - int(26 * u), x + 150, base, (8, 12, 26))
+    cv.rect(x + 158, base - int(44 * u), x + w, base, (8, 12, 26))
+    # Kingdom Centre tower (arched top, arc kept inside the scene)
     tx = x + w - 58
-    cv.rect(tx, base - 78, tx + 22, base, (8, 12, 26))
-    cv.arc(tx + 11, base - 78, 11, 180, 360, (8, 12, 26), 6)
+    cv.rect(tx, base - int(50 * u), tx + 22, base, (8, 12, 26))
+    cv.arc(tx + 11, base - int(42 * u), max(6, int(11 * u)), 180, 360, (8, 12, 26), 6)
     for wx in range(x + 8, x + w - 8, 14):
         cv.rect(wx, base - 18, wx + 4, base - 12, (255, 214, 120))
     # three intercept trails
@@ -866,8 +891,8 @@ def scene_riyadh(cv, x, y, w, h):
 def scene_peru(cv, x, y, w, h):
     _band(cv, x, y, w, h, SKY)
     # Andes
-    cv.poly([(x, y + h), (x + 70, y + 18), (x + 130, y + h)], (122, 96, 66))
-    cv.poly([(x + 90, y + h), (x + 190, y + 8), (x + 290, y + h)], (96, 76, 54))
+    cv.poly([(x, y + h), (x + 70, y + 18), (x + 130, y + h)], (112, 86, 58))
+    cv.poly([(x + 90, y + h), (x + 190, y + 8), (x + 290, y + h)], (88, 68, 48))
     cv.poly([(x + 170, y + 8), (x + 190, y + 8), (x + 200, y + 30),
              (x + 180, y + 30)], (250, 250, 248))
     cv.poly([(x + 52, y + 18), (x + 70, y + 18), (x + 78, y + 38),
@@ -884,34 +909,88 @@ def scene_peru(cv, x, y, w, h):
     for i in range(len(pts) - 1):
         cv.line(pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1], RED, 2)
     # small houses
-    for hx in (x + 220, x + 250, x + 280):
+    for hx in (x + 190, x + 220, x + 250, x + 280):
         cv.rect(hx, y + h - 38, hx + 20, y + h - 22, (200, 90, 70))
         cv.poly([(hx - 2, y + h - 38), (hx + 10, y + h - 48), (hx + 22, y + h - 38)],
                 (120, 60, 40))
+    # depth scale (like the leaders' quake cross-sections) + dust
+    cv.line(x + w - 16, y + 12, x + w - 16, y + 70, INK, 1)
+    for ty in (y + 12, y + 31, y + 50, y + 70):
+        cv.line(x + w - 20, ty, x + w - 12, ty, INK, 1)
+    draw_text(cv, x + w - 22, y + 10, "108 km", SANS_F, 7, INK, align='r')
+    for dx, dy in ((x + 80, y + h - 24), (x + 130, y + h - 12),
+                   (x + 200, y + h - 22)):
+        cv.disc(dx, dy, 5, (215, 195, 165))
+        cv.disc(dx + 6, dy - 3, 4, (225, 208, 180))
 
 def scene_bridge(cv, x, y, w, h):
     _band(cv, x, y, w, h, SKY)
-    cv.rect(x, y + h - 16, x + w, y + h, (120, 170, 210))
+    cv.rect(x, y + h - 16, x + w, y + h, (90, 150, 200))
     cv.line(x + 6, y + 22, x + w - 6, y + 22, (60, 60, 60), 4)
-    cv.arc(x + w // 2, y + 22, 52, 180, 360, (150, 40, 40), 4)
+    # arch radius scales with h: at 44 px the 36 px arc poked into the
+    # kicker strip above the scene (r11 first render)
+    cv.arc(x + w // 2, y + h - 16, min(36, h - 20), 180, 360, (150, 40, 40), 4)
     for px in range(x + 20, x + w - 10, 22):
         cv.line(px, y + 22, px, y + h - 16, (90, 90, 90), 2)
+    # blast burst at mid-span + smoke (the strike itself, like the leaders)
+    bx, by = x + w // 2, y + 22
+    cv.disc(bx, by - 4, 10, (255, 140, 40))
+    cv.disc(bx, by - 6, 6, (255, 220, 90))
+    cv.disc(bx, by - 2, 4, (255, 80, 30))
+    for dx, dy in ((-14, -10), (14, -12), (0, -18), (-8, 6), (10, 4)):
+        cv.line(bx, by - 4, bx + dx, by + dy, (255, 160, 60), 2)
+    cv.disc(bx - 12, by - 16, 6, (120, 120, 120))
+    cv.disc(bx + 10, by - 20, 5, (150, 150, 150))
     cv.rect(x + 8, y + h - 30, x + 26, y + h - 16, (200, 200, 200))
     cv.rect(x + w - 30, y + h - 30, x + w - 12, y + h - 16, (200, 200, 200))
 
+def scene_kryvyi(cv, x, y, w, h):
+    # Night city under a double-tap strike: dark sky, building
+    # silhouettes, one big blast burst with smoke, like the leaders' war
+    # scenes (this card's scene is only 46 px tall, so details stay small).
+    _band(cv, x, y, w, h, NIGHT)
+    for sx, sy in ((0.1, 0.2), (0.3, 0.1), (0.55, 0.18), (0.8, 0.1),
+                   (0.92, 0.25), (0.42, 0.3)):
+        cv.disc(int(x + w * sx), int(y + h * sy), 2, (240, 240, 220))
+    base = y + h
+    cv.rect(x, base - 22, x + 44, base, (8, 12, 26))
+    cv.rect(x + 52, base - 30, x + 84, base, (8, 12, 26))
+    cv.rect(x + 92, base - 18, x + 130, base, (8, 12, 26))
+    cv.rect(x + 138, base - 26, x + w, base, (8, 12, 26))
+    for wx in range(x + 6, x + w - 6, 12):
+        cv.rect(wx, base - 12, wx + 3, base - 8, (255, 214, 120))
+    # blast burst mid-right + smoke
+    bx, by = x + w - 52, y + h - 26
+    cv.disc(bx, by, 9, (255, 140, 40))
+    cv.disc(bx, by - 2, 5, (255, 220, 90))
+    cv.disc(bx, by, 3, (255, 80, 30))
+    for dx, dy in ((-12, -8), (12, -10), (0, -14), (-8, 4), (10, 4)):
+        cv.line(bx, by, bx + dx, by + dy, (255, 160, 60), 2)
+    cv.disc(bx - 10, by - 10, 5, (120, 120, 120))
+    cv.disc(bx + 8, by - 12, 4, (150, 150, 150))
+
 def scene_hormuz(cv, x, y, w, h):
-    _band(cv, x, y, w, h, (150, 195, 225))
-    cv.rect(x, y + h - 18, x + w, y + h, (36, 90, 150))
+    _band(cv, x, y, w, h, (120, 180, 215))
+    cv.rect(x, y + h - 18, x + w, y + h, (24, 70, 130))
     cv.line(x, y + h - 18, x + w, y + h - 18, (255, 255, 255), 2)
-    # tanker
-    cv.rect(x + 18, y + h - 34, x + 120, y + h - 18, (40, 40, 40))
-    cv.rect(x + 30, y + h - 46, x + 52, y + h - 34, (120, 40, 40))
-    cv.rect(x + 88, y + h - 42, x + 96, y + h - 34, (200, 200, 200))
-    # smoke + fire on deck
-    cv.disc(x + 44, y + h - 52, 7, (90, 90, 90))
-    cv.disc(x + 56, y + h - 58, 6, (120, 120, 120))
-    cv.disc(x + 40, y + h - 38, 6, (255, 140, 40))
-    cv.disc(x + 48, y + h - 36, 4, (255, 220, 90))
+    # tanker (stack/smoke/fire placed relative to the hull top: at h=44
+    # the old offsets put the smoke 13 px above the scene, on the strip)
+    ht = y + h - 34
+    cv.rect(x + 18, ht, x + 120, y + h - 18, (40, 40, 40))
+    cv.rect(x + 30, ht - 8, x + 52, ht, (120, 40, 40))
+    cv.rect(x + 88, ht - 8, x + 96, ht, (200, 200, 200))
+    # smoke + fire on deck, all inside the scene
+    cv.disc(x + 44, ht - 2, 6, (90, 90, 90))
+    cv.disc(x + 56, ht + 1, 5, (120, 120, 120))
+    cv.disc(x + 40, ht - 4, 4, (255, 140, 40))
+    cv.disc(x + 48, ht - 2, 3, (255, 220, 90))
+    cv.disc(x + 44, ht - 6, 4, (255, 140, 40))
+    cv.disc(x + 52, ht - 4, 4, (255, 80, 30))
+    # second boat (far left) + wave lines
+    cv.poly([(x + 8, y + 12), (x + 26, y + 12), (x + 22, y + 17),
+             (x + 12, y + 17)], (40, 48, 60))
+    cv.line(x + 20, y + h - 12, x + 60, y + h - 12, (255, 255, 255), 2)
+    cv.line(x + 90, y + h - 8, x + 130, y + h - 8, (255, 255, 255), 2)
     # drone above
     dx, dy = x + w - 48, y + 16
     cv.rect(dx - 10, dy - 3, dx + 10, dy + 3, (30, 30, 30))
@@ -926,7 +1005,7 @@ def scene_hormuz(cv, x, y, w, h):
 def scene_bahrain(cv, x, y, w, h):
     # map of Bahrain / Strait of Hormuz: sea, Arabia (left), Iran (top
     # right), Bahrain island pinned, two tankers on the strait, one afire.
-    _band(cv, x, y, w, h, (168, 205, 228))
+    _band(cv, x, y, w, h, (140, 192, 224))
     # Arabian peninsula (left/bottom)
     cv.poly([(x, y + h), (x, y + h * 0.42), (x + w * 0.30, y + h * 0.52),
              (x + w * 0.44, y + h * 0.78), (x + w * 0.38, y + h)],
@@ -937,6 +1016,19 @@ def scene_bahrain(cv, x, y, w, h):
             (210, 190, 140))
     # Qatar peninsula (west shore, below Bahrain)
     ellipse(cv, int(x + w * 0.335), int(y + h * 0.63), 10, 6, (232, 217, 176))
+    # Bahrain island, pinned, with country labels (like the leaders' maps)
+    ellipse(cv, int(x + w * 0.47), int(y + h * 0.52), 7, 5, (232, 217, 176))
+    bx, by = int(x + w * 0.47), int(y + h * 0.52)
+    cv.disc(bx, by, 4, RED)
+    cv.ring(bx, by, 4, 2, (255, 255, 255))
+    draw_text(cv, int(x + w * 0.47), int(y + h * 0.44), "BAHRAIN", SANS_F, 7,
+              INK, align='c')
+    draw_text(cv, int(x + w * 0.80), int(y + h * 0.12), "IRAN", SANS_F, 8,
+              INK_SOFT, align='c')
+    draw_text(cv, int(x + w * 0.12), int(y + h * 0.58), "SAUDI", SANS_F, 8,
+              INK_SOFT, align='c')
+    draw_text(cv, int(x + w * 0.30), int(y + h * 0.74), "QATAR", SANS_F, 7,
+              INK_SOFT, align='c')
     # Oman / Musandam (bottom right) + Khasab
     cv.poly([(x + w * 0.74, y + h), (x + w * 0.80, y + h * 0.74),
              (x + w * 0.92, y + h * 0.70), (x + w, y + h * 0.76),
@@ -978,21 +1070,32 @@ def scene_bahrain(cv, x, y, w, h):
 
 def scene_tehran(cv, x, y, w, h):
     # dome kept small and centred: clear margin to the label below (r2 defect)
+    # Verticals scale with h: at 44 px (medium card) the 56 px dome +
+    # finial poked into the kicker strip above the scene (r11 first render).
+    u = h / 56.0
     _band(cv, x, y, w, h, (232, 222, 196))
+    cv.rect(x, y, x + w, y + int(12 * u), (170, 205, 225))
     cx = x + w // 2
     base = y + h - 6
-    cv.rect(cx - 34, base - 16, cx + 34, base, (120, 90, 60))
-    cv.disc(cx, base - 16, 30, (20, 110, 110))
-    cv.rect(cx - 30, base - 16, cx + 30, base - 10, (20, 110, 110))
-    cv.disc(cx, base - 48, 4, GOLD)
-    cv.line(cx, base - 48, cx, base - 40, GOLD, 2)
-    cv.rect(cx - 52, base - 34, cx - 44, base, (150, 120, 80))
-    cv.disc(cx - 48, base - 36, 5, (150, 120, 80))
-    cv.rect(cx + 44, base - 34, cx + 52, base, (150, 120, 80))
-    cv.disc(cx + 48, base - 36, 5, (150, 120, 80))
+    dh = 16 * u
+    cv.rect(cx - 34, int(base - dh), cx + 34, base, (120, 90, 60))
+    cv.disc(cx, int(base - dh), int(30 * u), (14, 95, 95))
+    # arched windows on the drum
+    for wx in (cx - 22, cx, cx + 22):
+        cv.rect(wx - 4, int(base - dh + 2 * u), wx + 4, int(base - 4 * u), (60, 50, 40))
+    cv.rect(cx - 30, int(base - dh), cx + 30, int(base - dh + 6 * u), (20, 110, 110))
+    if h >= 56:
+        # finial: only room for it at the r10 height; at 44 px it would
+        # sit on the kicker strip.
+        cv.disc(cx, int(base - dh - 30 * u - 6), 4, GOLD)
+        cv.line(cx, int(base - dh - 30 * u - 6), cx, int(base - dh - 30 * u), GOLD, 2)
+    cv.rect(cx - 52, int(base - 34 * u), cx - 44, base, (150, 120, 80))
+    cv.disc(cx - 48, int(base - 36 * u), max(3, int(5 * u)), (150, 120, 80))
+    cv.rect(cx + 44, int(base - 34 * u), cx + 52, base, (150, 120, 80))
+    cv.disc(cx + 48, int(base - 36 * u), max(3, int(5 * u)), (150, 120, 80))
 
 def scene_washington(cv, x, y, w, h):
-    _band(cv, x, y, w, h, (214, 228, 240))
+    _band(cv, x, y, w, h, (178, 204, 230))
     cx = x + w // 2
     base = y + h - 4
     cv.rect(cx - 40, base - 12, cx + 40, base, (240, 240, 238))
@@ -1000,6 +1103,14 @@ def scene_washington(cv, x, y, w, h):
     cv.disc(cx, base - 20, 16, (240, 240, 238))
     cv.line(cx, base - 40, cx, base - 34, INK, 2)
     cv.disc(cx, base - 42, 3, INK)
+    # US flag on a pole + second building (like the leaders' scenes)
+    cv.line(cx + 34, base - 38, cx + 34, base - 20, INK, 2)
+    cv.rect(cx + 34, base - 38, cx + 52, base - 28, (185, 28, 28))
+    cv.rect(cx + 34, base - 35, cx + 52, base - 33, (255, 255, 255))
+    cv.rect(cx + 34, base - 31, cx + 52, base - 29, (255, 255, 255))
+    cv.rect(cx + 34, base - 38, cx + 41, base - 32, (29, 78, 216))
+    cv.rect(cx - 92, base - 8, cx - 62, base, (200, 200, 196))
+    cv.rect(cx - 84, base - 14, cx - 70, base - 8, (220, 220, 216))
     for px in (cx - 52, cx + 44):
         cv.rect(px, base - 22, px + 8, base, (200, 200, 196))
     # server rack right
@@ -1010,26 +1121,41 @@ def scene_washington(cv, x, y, w, h):
         cv.rect(rx + 15, ry, rx + 20, ry + 3, (220, 220, 220))
 
 def scene_beijing(cv, x, y, w, h):
+    # Temple tiers scale with h: at 44 px (medium card) the finial poked
+    # into the kicker strip above the scene (r11 first render).
+    u = h / 56.0
     _band(cv, x, y, w, h, (246, 226, 200))
+    cv.disc(x + 24, y + int(16 * u), max(6, int(10 * u)), (220, 60, 40))
     cx = x + w // 2
     base = y + h - 4
     tiers = [(46, 8), (38, 8), (30, 8)]
     yy = base
     for tw, th in tiers:
-        cv.rect(cx - tw // 2, yy - th, cx + tw // 2, yy, (150, 50, 40))
-        cv.rect(cx - tw // 2 - 6, yy - th - 3, cx + tw // 2 + 6, yy - th, (90, 30, 25))
-        yy -= th + 3
-    cv.rect(cx - 3, yy - 10, cx + 3, yy, (90, 30, 25))
-    cv.disc(cx, yy - 12, 4, GOLD)
-    cv.rect(x, base, x + w, base + 4, (120, 100, 70))
+        th = int(th * u)
+        cv.rect(cx - tw // 2, yy - th, cx + tw // 2, yy, (170, 40, 30))
+        cv.rect(cx - tw // 2 - 6, yy - th - int(3 * u), cx + tw // 2 + 6, yy - th, (110, 25, 20))
+        yy -= th + int(3 * u)
+    cv.rect(cx - 3, yy - int(10 * u), cx + 3, yy, (110, 25, 20))
+    cv.disc(cx, yy - int(12 * u), max(3, int(4 * u)), GOLD)
+    # trees at the sides
+    for tx in (x + 22, x + w - 22):
+        cv.line(tx, int(base - 16 * u), tx, int(base - 4 * u), (90, 70, 50), 2)
+        cv.disc(tx, int(base - 20 * u), max(4, int(6 * u)), (40, 120, 60))
+    cv.rect(x, base, x + w, base + int(4 * u), (120, 100, 70))
 
 def scene_davao(cv, x, y, w, h):
     _band(cv, x, y, w, h, SKY)
     cv.rect(x, y + h - 10, x + w, y + h - 6, (90, 90, 90))
     for px in range(x + 6, x + w - 6, 18):
         cv.rect(px, y + h - 9, px + 8, y + h - 7, (255, 255, 255))
-    # plane side view
-    px, py = x + 22, y + h // 2 - 4
+    # clouds + control tower
+    ellipse(cv, x + 150, y + 12, 16, 5, (255, 255, 255))
+    ellipse(cv, x + 52, y + 8, 12, 4, (255, 255, 255))
+    cv.rect(x + w - 26, y + h - 34, x + w - 18, y + h - 10, (120, 120, 120))
+    cv.disc(x + w - 22, y + h - 36, 4, (90, 90, 90))
+    # plane side view (py raised: the tail fins poked 4 px above the
+    # scene, onto the kicker strip, at h=44 in the r11 first render)
+    px, py = x + 22, y + h // 2
     cv.rect(px, py - 6, px + 110, py + 6, (240, 240, 240))
     cv.poly([(px + 110, py - 6), (px + 138, py - 1), (px + 110, py + 6)], (220, 220, 220))
     cv.poly([(px + 6, py - 6), (px + 22, py - 22), (px + 34, py - 6)], (200, 40, 40))
@@ -1037,6 +1163,9 @@ def scene_davao(cv, x, y, w, h):
     cv.poly([(px + 96, py - 6), (px + 116, py - 20), (px + 124, py - 6)], (200, 40, 40))
     for wx in range(px + 12, px + 104, 14):
         cv.rect(wx, py - 3, wx + 6, py + 1, (29, 78, 216))
+    # fire glow at the tail (the story: jet lands after fire)
+    cv.disc(px + 10, py - 2, 8, (255, 140, 40))
+    cv.disc(px + 14, py - 4, 5, (255, 220, 90))
 
 def scene_canberra(cv, x, y, w, h):
     # AI circle kept small and centred: clear margin to the label below
@@ -1053,6 +1182,10 @@ def scene_canberra(cv, x, y, w, h):
 
 def scene_bitcoin(cv, x, y, w, h):
     _band(cv, x, y, w, h, (18, 20, 28))
+    for gx in range(x + 30, x + w - 10, 30):
+        cv.vline(gx, y + 6, y + h - 10, (40, 44, 56), 1)
+    for gy in (y + 14, y + 26, y + 38):
+        cv.hline(x + 6, x + w - 6, gy, (40, 44, 56), 1)
     # down chart
     pts = [(x + 10, y + 14), (x + 40, y + 20), (x + 60, y + 12), (x + 90, y + 26),
            (x + 120, y + 22), (x + 150, y + 40), (x + 170, y + 34)]
@@ -1069,14 +1202,23 @@ def scene_bitcoin(cv, x, y, w, h):
 
 def scene_f1(cv, x, y, w, h):
     _band(cv, x, y, w, h, (232, 232, 228))
+    cv.rect(x, y + h - 14, x + w, y + h, (40, 40, 44))
+    # speed lines behind the car
+    for sy in (y + h - 30, y + h - 24, y + h - 18):
+        cv.line(x + 6, sy, x + 30, sy, (255, 255, 255), 2)
+    # checkered flag on a pole, right
+    cv.line(x + w - 16, y + 12, x + w - 16, y + 34, INK, 2)
+    cv.rect(x + w - 16, y + 12, x + w - 8, y + 20, (255, 255, 255))
+    cv.rect(x + w - 12, y + 12, x + w - 8, y + 16, INK)
+    cv.rect(x + w - 16, y + 16, x + w - 12, y + 20, INK)
     # checkered strip top
     for i in range(12):
         cv.rect(x + i * 16, y + 2, x + i * 16 + 8, y + 10,
                 INK if i % 2 == 0 else (255, 255, 255))
-    # car side view
-    px, py = x + 24, y + h - 20
+    # car side view (wheels on the asphalt)
+    px, py = x + 24, y + h - 16
     cv.poly([(px, py), (px + 18, py - 12), (px + 78, py - 12), (px + 96, py - 4),
-             (px + 128, py - 4), (px + 138, py), (px, py)], (185, 28, 28))
+             (px + 128, py - 4), (px + 138, py), (px, py)], (200, 30, 30))
     cv.poly([(px + 40, py - 12), (px + 52, py - 22), (px + 78, py - 22),
              (px + 86, py - 12)], (40, 40, 40))
     cv.disc(px + 30, py + 1, 9, INK)
@@ -1086,8 +1228,14 @@ def scene_f1(cv, x, y, w, h):
     cv.rect(px - 6, py - 14, px + 2, py - 2, INK)
 
 def scene_cricket(cv, x, y, w, h):
-    _band(cv, x, y, w, h, (120, 180, 100))
+    _band(cv, x, y, w, h, (105, 170, 90))
     cv.rect(x, y + h - 12, x + w, y + h, (90, 140, 70))
+    # pitch strip + crowd dots + boundary rope
+    cv.rect(x + 84, y + 8, x + 132, y + h - 12, (150, 205, 125))
+    for j, cx in enumerate(range(x + 10, x + w - 6, 22)):
+        cv.disc(cx, y + 8, 3, ((185, 28, 28), (29, 78, 216),
+                               (21, 128, 61), (220, 160, 40))[j % 4])
+    cv.hline(x, x + w, y + h - 12, (255, 255, 255), 1)
     # stumps
     for sx in (x + 34, x + 42, x + 50):
         cv.rect(sx, y + h - 34, sx + 4, y + h - 12, (240, 220, 160))
@@ -1099,10 +1247,12 @@ def scene_cricket(cv, x, y, w, h):
     cv.arc(x + 150, y + 16, 5, 200, 340, (255, 255, 255), 2)
 
 # ---------------------------------------------------------------- world map
-MAP_PINS = [  # (story no, lon, lat)
-    (1, 50.6, 26.2), (2, 36.9, 36.9), (3, -76.0, -11.0), (4, 30.5, 50.5),
-    (5, 56.5, 26.5), (6, 51.4, 35.7), (7, -77.0, 39.0), (8, 116.4, 39.9),
-    (9, 125.6, 7.1), (10, 46.7, 24.7), (12, -115.0, 36.0), (13, 174.8, -41.3),
+MAP_PINS = [  # (story no, lon, lat) — renumbered for r11 (15 drawn);
+    # Antalya lon fixed 36.9 -> 30.7 (r10 pinned it 6 deg too far east).
+    (1, 50.6, 26.2), (2, 30.7, 36.9), (3, -76.0, -11.0), (4, 30.5, 50.5),
+    (5, 33.4, 47.9), (6, 56.5, 26.5), (7, 51.4, 35.7), (8, -77.0, 39.0),
+    (9, 116.4, 39.9), (10, 125.6, 7.1), (11, 46.7, 24.7), (13, -115.0, 36.0),
+    (14, 174.8, -41.3), (15, 149.1, -35.3),
 ]
 MAP_LAND = [  # (lon, lat, rx, ry) ellipses, degrees
     (-100, 48, 28, 14), (-88, 38, 18, 10), (-95, 62, 20, 8), (-150, 64, 14, 7),
@@ -1128,12 +1278,26 @@ def draw_map(cv, x, y, w, h):
     for lat in (40, 0, -40):
         _, gy = px(0, lat)
         cv.hline(x, x + w, int(gy), (190, 210, 220), 1)
+    # Pins are 6 px radius: at this map scale Kyiv/Kryvyi Rih (200 km
+    # apart) and Bahrain/Hormuz/Riyadh (400-500 km) share one dot, so a
+    # colliding pin's number is drawn just beside its disc (alternating
+    # sides, in red so it reads on the sea) instead of on top of the
+    # neighbour's number.
+    placed = []
+    ncol = 0
     for no, lon, lat in MAP_PINS:
         cx, cy = px(lon, lat)
-        cv.disc(int(cx), int(cy), 9, RED)
-        cv.ring(int(cx), int(cy), 9, 7, (255, 255, 255))
-        draw_text(cv, int(cx), int(cy) + 3, str(no), SANS_F, 10,
-                  (255, 255, 255), align='c')
+        if any((cx - ox) ** 2 + (cy - oy) ** 2 < 100 for ox, oy in placed):
+            dx = 11 if ncol % 2 == 0 else -11
+            ncol += 1
+            col = RED
+        else:
+            dx, col = 0, (255, 255, 255)
+        placed.append((cx, cy))
+        cv.disc(int(cx), int(cy), 6, RED)
+        cv.ring(int(cx), int(cy), 6, 4, (255, 255, 255))
+        draw_text(cv, int(cx) + dx, int(cy) + 3, str(no), SANS_F, 8,
+                  col, align='c')
 
 # ---------------------------------------------------------------- story data
 # Facts, figures and sources ONLY from GO-REPORT.md / research-21nov-fresh.md.
@@ -1149,125 +1313,130 @@ HEROES = [
          status="CONFIRMED", sources="AFP, UKMTO",
          title="Iran strikes Bahrain as tankers hit in Hormuz",
          summary="Bahrain says Iran hit a civilian plant; fire, no one hurt. "
-                 "Two tankers struck off Khasab.",
+                 "Two tankers struck off Khasab. (AFP, UKMTO)",
          scene=scene_bahrain),
     dict(no=2, kicker="COP31: OVERTIME", region="Global", topic="CLIMATE",
          place="ANTALYA, TURKIYE",
          status="CONFIRMED", sources="REUTERS, AP",
          title="COP31 overtime, day 13",
          summary="No deal yet: draft cut to 80 paras, no fossil fuels named. "
-                 "Third draft due Saturday morning.",
+                 "Third draft due Saturday. (REUTERS, AP)",
          scene=scene_cop31),
     dict(no=3, kicker="PERU: QUAKE 6.7", region="Americas", topic="EARTHQUAKE",
          place="JUNIN, PERU",
          status="CONFIRMED", sources="USGS, IGP",
          title="M6.7 quake shakes Peru, 8 hurt",
          summary="108 km deep; 8 hurt, 128 homes hit. "
-                 "Felt in Lima; no tsunami.",
+                 "Felt in Lima; no tsunami. (USGS, IGP)",
          scene=scene_peru),
 ]
 MEDIUM = [
-    dict(no=4, kicker="4 \u00b7 KYIV \u2014 WAR", region="Europe",
-         status="REPORTED", sources="NBC",
+    dict(no=4, kicker="4 KYIV \u2014 WAR", region="Europe",
+         status="REPORTED", sources="NBC", pill="DOUBLE-TAP",
          title="Crimea bridge will not stay",
-         summary="Zelensky warns of rising Russian double-tap strikes.",
+         summary="Zelensky warns of rising Russian double-tap strikes. (NBC)",
          scene=scene_bridge),
-    dict(no=5, kicker="5 \u00b7 HORMUZ \u2014 WAR", region="Middle East",
-         status="REPORTED", sources="IRIB",
+    dict(no=5, kicker="5 KRYVYI RIH \u2014 WAR", region="Europe",
+         status="REPORTED", sources="AP", pill="60 HURT",
+         title="Strike kills 2, injures 60",
+         summary="Double-tap strike kills 2, injures 60; homes ablaze. (AP)",
+         scene=scene_kryvyi),
+    dict(no=6, kicker="6 HORMUZ \u2014 WAR", region="Middle East",
+         status="REPORTED", sources="IRIB", pill="58TH MQ-9",
          title="Iran downs US drone",
-         summary="IRGC claims its 58th MQ-9 downed; US has not confirmed.",
+         summary="IRGC claims its 58th MQ-9 downed; US has not confirmed. (IRIB)",
          scene=scene_hormuz),
-    dict(no=6, kicker="6 \u00b7 TEHRAN \u2014 DIPLOMACY", region="Asia",
-         status="OFFICIAL", sources="IRNA",
+    dict(no=7, kicker="7 TEHRAN \u2014 DIPLOMACY", region="Asia",
+         status="OFFICIAL", sources="IRNA", pill="RED LINE",
          title="Uranium stays at home",
-         summary="Araghchi: the material stays; seeks a fair solution.",
+         summary="Araghchi: the material stays; seeks a fair solution. (IRNA)",
          scene=scene_tehran),
-    dict(no=7, kicker="7 \u00b7 WASHINGTON \u2014 TECHNOLOGY", region="Americas",
-         status="REPORTED", sources="REUTERS",
+    dict(no=8, kicker="8 WASHINGTON \u2014 TECHNOLOGY", region="Americas",
+         status="REPORTED", sources="REUTERS", pill="TAX VOWED",
          title="Trump vows data-centre tax",
-         summary="\u2018Tremendous tax\u2019 for US firms building abroad.",
+         summary="\u2018Tremendous tax\u2019 for US firms building abroad. (REUTERS)",
          scene=scene_washington),
-    dict(no=8, kicker="8 \u00b7 BEIJING \u2014 DIPLOMACY", region="Asia",
-         status="OFFICIAL", sources="AFP",
+    dict(no=9, kicker="9 BEIJING \u2014 DIPLOMACY", region="Asia",
+         status="OFFICIAL", sources="AFP", pill="CORRECT IT",
          title="Fix Taiwan words, China says",
-         summary="Beijing: Tokyo must correct its Taiwan remarks.",
+         summary="Beijing: Tokyo must correct its Taiwan remarks. (AFP)",
          scene=scene_beijing),
-    dict(no=9, kicker="9 \u00b7 DAVAO \u2014 AVIATION", region="Oceania",
-         status="CONFIRMED", sources="AP",
+    dict(no=10, kicker="10 DAVAO \u2014 AVIATION", region="Oceania",
+         status="CONFIRMED", sources="AP", pill="146 SAFE",
          title="Jet lands safe after fire",
-         summary="PX19 diverted; 146 aboard, all safe, out by slide.",
+         summary="PX19 diverted; 146 aboard, all safe, out by slide. (AP)",
          scene=scene_davao),
-    dict(no=10, kicker="10 \u00b7 RIYADH \u2014 WAR", region="Middle East",
-         status="CONFIRMED", sources="REUTERS, AFP",
+    dict(no=11, kicker="11 RIYADH \u2014 WAR", region="Middle East",
+         status="CONFIRMED", sources="REUTERS, AFP", pill="3 SHOT DOWN",
          title="3 missiles down over Riyadh",
-         summary="Shot down before dawn; no casualties. "
-                 "Second attack in days.",
+         summary="Shot down before dawn; no casualties. Second attack in days. "
+                 "(REUTERS, AFP)",
          scene=scene_riyadh),
-    dict(no=11, kicker="11 \u00b7 WORLD \u2014 MARKETS", region="World",
-         status="CONFIRMED", sources="COINGECKO",
+    dict(no=12, kicker="12 WORLD \u2014 MARKETS", region="World",
+         status="CONFIRMED", sources="COINGECKO", pill="$58,960",
          title="Bitcoin slips below $59,000",
-         summary="$58,960, down 4.8% in a day; lowest since September 2024.",
+         summary="$58,960, down 4.8% in a day; lowest since September 2024. "
+                 "(COINGECKO)",
          scene=scene_bitcoin),
-    dict(no=12, kicker="12 \u00b7 LAS VEGAS \u2014 FORMULA 1", region="Americas",
-         status="OFFICIAL", sources="FORMULA 1",
+    dict(no=13, kicker="13 LAS VEGAS \u2014 FORMULA 1", region="Americas",
+         status="OFFICIAL", sources="FORMULA 1", pill="1:34.151",
          title="Verstappen on pole",
-         summary="Antonelli fastest in qualifying but takes a five-grid penalty.",
+         summary="Antonelli fastest in qualifying but takes a five-grid penalty. "
+                 "(FORMULA 1)",
          scene=scene_f1),
-    dict(no=13, kicker="13 \u00b7 WELLINGTON \u2014 CRICKET", region="Oceania",
-         status="CONFIRMED", sources="AFP",
+    dict(no=14, kicker="14 WELLINGTON \u2014 CRICKET", region="Oceania",
+         status="CONFIRMED", sources="AFP", pill="124*",
          title="Rahul century lifts India",
-         summary="Rahul 124* at tea, day three of the first Test; India 344 for 2.",
+         summary="Rahul 124* at tea, day three of the first Test; India 344 for 2. "
+                 "(AFP)",
          scene=scene_cricket),
+    dict(no=15, kicker="15 CANBERRA \u2014 DIPLOMACY", region="Oceania",
+         status="OFFICIAL", sources="ABC", pill="AI TALKS",
+         title="Australia, China agree AI talks",
+         summary="Dialogue on AI safety and governance; an 11-day trip ends. (ABC)",
+         scene=scene_canberra),
 ]
-# ALSO ON: 35 items, three columns of 12/12/11. Round 8: restored the 11
-# strongest stories cut in r5 (PLN deals, Canada trial, Sejong derail,
-# Akvan rain, Myanmar, Cummins, Sozcu TV, France UN meeting, drone output,
-# Islamabad, Rohingya pact); still cut: Russell (34), Estonia (46),
-# London rugby (48). Renumbered sequentially 14..48 by display order.
-# Longest items shortened (facts kept) to fit the 3-column width.
+# ALSO ON: 23 items, two columns of 12 + 11 (round 11: #9's bottom third
+# — 2 columns at 10 px with bold place leads). Round 11 promotes Kryvyi
+# Rih + Canberra to medium cards and cuts the 5 least consequential
+# (LA Palisades conviction, Pyongyang factory tour, Taipei budget,
+# Melbourne Cummins, Paris Zecler sentence); renumbered 16..38.
+# Total 38 stories (15 drawn + 23 briefs). Still cut: Russell, Estonia,
+# London rugby, Texas execution, Sejong derail, Bangkok arsenic plan,
+# Eastern India rain alerts, Port Louis ratings talks.
 ALSO_ON = [
-    (14, "Kryvyi Rih: double-tap strike kills 2, injures 60", "AP"),
-    (15, "Copenhagen: Denmark says it foiled a Russian plot", "AJ"),
-    (16, "Antalya: EU warns COP31 risks a \u201cfossil summit\u201d", "AFP"),
-    (17, "Antalya: Panama threatens to block climate text", "AJ"),
-    (18, "Antalya: Indonesia PLN signs clean-power deals", "Antara"),
-    (19, "Canberra: Australia and China agree AI talks", "ABC"),
+    (16, "Copenhagen: Denmark says it foiled a Russian plot", "AJ"),
+    (17, "Antalya: EU warns COP31 risks a “fossil summit”", "AFP"),
+    (18, "Antalya: Panama threatens to block climate text", "AJ"),
+    (19, "Antalya: Indonesia PLN signs clean-power deals", "Antara"),
     (20, "Yemen: Houthis threaten Jeddah and Red Sea ports", "AJ"),
-    (21, "Washington: Vance says Iran strikes were Trump\u2019s call", "Reuters"),
-    (22, "Texas: execution of a man of 70 takes 63 minutes", "ABC"),
-    (23, "Los Angeles: jury convicts man of starting Palisades fire", "ABC"),
-    (24, "Missouri: judge approves $7.25bn Roundup settlement", "AFP"),
-    (25, "Vancouver: Canada rests defence in youth climate trial", "AFP"),
-    (26, "Pyongyang: Kim tours factories after no Trump meeting", "AFP"),
-    (27, "Sejong: freight train derails; no one hurt", "Korea Herald"),
-    (28, "Taipei: budget and cash payout are passed", "TT"),
-    (29, "Bangkok: six-point plan on arsenic in two rivers", "Nation"),
-    (30, "New Delhi: Pakistani minister joins SCO forum in India", "Dawn"),
-    (31, "Eastern India: rain alerts as Akvan remnants move inland", "ETV"),
-    (32, "Myanmar: rights groups urge sanctions after court ruling", "AP"),
-    (33, "Port Louis: African ratings agency talks to 15 states", "AJ"),
-    (34, "Melbourne: Cummins keeps the Australian captaincy", "ABC"),
-    (35, "Mexico: \u201cEl Chapo Isidro\u201d captured in Sinaloa", "AP"),
-    (36, "Baltic: Russian ship Sparta II on fire after drone hit", "Reuters"),
-    (37, "Washington: Trump weighs new Iran strikes, officials say", "NYT"),
-    (38, "Paris: French police sentenced over Zecler beating", "AP"),
-    (39, "Geneva: UN talks to keep working on AI weapons rules", "AP"),
-    (40, "Port-au-Prince: Salvadoran troops fight gangs in Haiti", "AP"),
-    (41, "Southern Ethiopia: 700,000 displaced", "AP"),
-    (42, "Istanbul: Turkey takes control of Sozcu TV", "Reuters"),
-    (43, "Gaza: at least 4 killed in Israeli strikes amid truce", "AP"),
-    (44, "Baghdad: fire at Iraqi power plant kills 4", "AP"),
-    (45, "Paris: France seeks UN Council meeting on Kyiv attacks", "AFP"),
-    (46, "Berlin: German-Ukrainian firms raise drone output 5x", "Reuters"),
-    (47, "Islamabad: death sentence over \u201csacrilegious\u201d posts", "AP"),
-    (48, "Kuala Lumpur: Malaysia-Turkey pact for 10,000 Rohingya", "AP"),
+    (21, "Washington: Vance: Trump’s Iran call", "Reuters"),
+    (22, "Missouri: judge OKs $7.25bn Roundup deal", "AFP"),
+    (23, "Vancouver: Canada rests youth climate case", "AFP"),
+    (24, "New Delhi: Pakistani minister joins SCO forum", "Dawn"),
+    (25, "Myanmar: sanctions urged after court ruling", "AP"),
+    (26, "Mexico: “El Chapo Isidro” captured in Sinaloa", "AP"),
+    (27, "Baltic: Russian ship Sparta II on fire after drone hit", "Reuters"),
+    (28, "Washington: Trump weighs new Iran strikes", "NYT"),
+    (29, "Geneva: UN talks continue on AI weapons", "AP"),
+    (30, "Port-au-Prince: Salvadoran troops fight gangs", "AP"),
+    (31, "Southern Ethiopia: 700,000 displaced", "AP"),
+    (32, "Istanbul: Turkey takes control of Sozcu TV", "Reuters"),
+    (33, "Gaza: at least 4 killed in Israeli strikes amid truce", "AP"),
+    (34, "Baghdad: fire at Iraqi power plant kills 4", "AP"),
+    (35, "Paris: France seeks UN meeting on Kyiv", "AFP"),
+    (36, "Berlin: German-Ukrainian drone output up 5x", "Reuters"),
+    (37, "Islamabad: death sentence over “sacrilegious” posts", "AP"),
+    (38, "Kuala Lumpur: Turkey pact for 10,000 Rohingya", "AP"),
 ]
 NUMBERS = [("13", "COP31 DAY"), ("2", "TANKERS HORMUZ"), ("6.7", "PERU QUAKE"),
            ("146", "SAFE IN DAVAO"), ("$58,960", "BITCOIN"), ("124*", "RAHUL")]
-REGIONS = [("EUROPE", "Europe", 10), ("MIDDLE EAST", "Middle East", 7),
-           ("AMERICAS", "Americas", 12), ("ASIA", "Asia", 12),
-           ("AFRICA", "Africa", 2), ("OCEANIA", "Oceania", 3),
-           ("GLOBAL", "Global", 2)]
+# Counts recomputed from the r11 story list (38): Europe 7, Middle East 6,
+# Americas 9, Asia 7, Africa 1, Oceania 3, Global 5.
+REGIONS = [("EUROPE", "Europe", 7), ("MIDDLE EAST", "Middle East", 6),
+           ("AMERICAS", "Americas", 9), ("ASIA", "Asia", 7),
+           ("AFRICA", "Africa", 1), ("OCEANIA", "Oceania", 3),
+           ("GLOBAL", "Global", 5)]
 DATE_CHECK = ("Not 21 Nov, so left out: 20 Nov \u2014 Wall Street falls; Kyiv bridge "
               "strikes; missiles in Poland; UK\u2013EU deal; Cyclone Akvan lands; "
               "2 missiles over Jazan. 19 Nov \u2014 PIF tower hit; ICJ Myanmar ruling. "
@@ -1319,11 +1488,10 @@ def status_pill(cv, x, y, status, font, size):
 
 def build():
     cv = Canvas(W, H, PAPER)
-    # ---- top bar
-    draw_text(cv, MX, 13, "THE WORLD IN ONE DAY", SANS_F, 10, INK)
-    draw_text(cv, W // 2, 13, "48 STORIES \u00b7 7 REGIONS", SANS_F, 10, RED,
-              align='c')
-    draw_text(cv, W - MX, 13, "ALL TIMES UTC", SANS_F, 10, INK, align='r')
+    # ---- top bar (round 11: #9's kicker + counts)
+    draw_text(cv, MX, 13, "THE WORLD IN ONE PICTURE", SANS_F, 10, INK)
+    draw_text(cv, W - MX, 13, "15 STORIES DRAWN \u00b7 23 BRIEFS \u00b7 7 REGIONS",
+              SANS_F, 10, RED, align='r')
     cv.hline(MX, W - MX, 18, RULE, 2)
     # ---- masthead
     size = 60
@@ -1338,39 +1506,47 @@ def build():
               "\u25c6 Peru quake M6.7",
               SERIF_F, 16, INK, align='c', slant=0.18)
     cv.hline(MX, W - MX, 120, RULE, 1)
-    # ---- number strip
-    y0, y1 = 122, 170
+    # ---- number strip (36 px: room for the third medium row)
+    y0, y1 = 122, 158
     cellw = (W - 2 * MX) / 6.0
     for i, (num, lab) in enumerate(NUMBERS):
         cx = MX + cellw * i
         if i:
             cv.vline(int(cx), y0 + 4, y1 - 4, GREY, 1)
-        draw_text(cv, cx + cellw / 2, y0 + 30, num, SERIF_BOLD_F, 30, RED, align='c')
-        draw_text(cv, cx + cellw / 2, y0 + 45, lab, SANS_F, 10, INK_SOFT,
+        draw_text(cv, cx + cellw / 2, y0 + 21, num, SERIF_BOLD_F, 26, RED, align='c')
+        draw_text(cv, cx + cellw / 2, y0 + 33, lab, SANS_F, 10, INK_SOFT,
                   align='c')
     cv.hline(MX, W - MX, y1, RULE, 2)
-    # ---- region bar
-    y0, y1 = 172, 188
-    labw = 120
-    cv.rect(MX, y0, MX + labw, y1, DARK)
-    draw_text(cv, MX + 6, y0 + 12, "STORIES BY REGION", SANS_F, 8.5,
-              (255, 255, 255))
+    # ---- region bar (round 11: #9's full-width segments, no label box)
+    y0, y1 = 160, 176
     tot = sum(n for _, _, n in REGIONS)
-    rx = MX + labw
-    avail = W - MX - rx
+    rx = MX
+    avail = W - 2 * MX
+    # two passes: all segment rects first, then all labels — a tiny
+    # segment's label (AFRICA 1) must not be covered by the next rect
+    segs = []
     for label, cname, n in REGIONS:
         sw = avail * n / tot
         cv.rect(int(rx), y0, int(rx + sw), y1, REGION_COLOR[cname])
+        segs.append((rx, sw, label, n))
+        rx += sw
+    for rx, sw, label, n in segs:
         txt = "%s %d" % (label, n)
         fs = 8.0
-        while fs > 6.0 and text_width(txt, SANS_F, fs) > sw - 5:
+        while fs > 5.5 and text_width(txt, SANS_F, fs) > sw - 5:
             fs -= 0.5
-        draw_text(cv, int(rx) + 3, y0 + 12, txt, SANS_F, fs,
-                  (255, 255, 255))
-        rx += sw
+        if text_width(txt, SANS_F, fs) > sw - 5:
+            # too narrow even at the floor: centre on the segment so the
+            # spill is symmetric and small (AFRICA 1, 27 px on a 21 px bar)
+            draw_text(cv, int(rx + sw / 2), y0 + 12, txt, SANS_F, fs,
+                      (255, 255, 255), align='c')
+        else:
+            draw_text(cv, int(rx) + 3, y0 + 12, txt, SANS_F, fs,
+                      (255, 255, 255))
     cv.hline(MX, W - MX, y1, RULE, 2)
-    # ---- heroes
-    hy0, hy1 = 190, 452
+    # ---- heroes (224 px; round 11: #9's full-width kicker band ON the scene,
+    # sources inline in the summary like #9 — no separate source line)
+    hy0, hy1 = 178, 402
     hw = 328
     for i, st in enumerate(HEROES):
         x = MX + i * (hw + 10)
@@ -1379,87 +1555,107 @@ def build():
         cv.rect(x, hy1 - 1, x + hw, hy1, RULE)
         cv.rect(x, hy0, x + 1, hy1, RULE)
         cv.rect(x + hw - 1, hy0, x + hw, hy1, RULE)
-        # scene band with kicker banner on top (like the leaders)
-        st['scene'](cv, x + 1, hy0 + 1, hw - 2, 132)
+        # kicker band: full width, on top of the scene
         col = REGION_COLOR[st['region']]
-        bw = int(text_width(st['kicker'], SANS_F, 13) + 14)
-        cv.rect(x + 7, hy0 + 7, x + 7 + bw, hy0 + 29, col)
-        draw_text(cv, x + 14, hy0 + 24, st['kicker'], SANS_F, 13,
+        cv.rect(x + 1, hy0 + 1, x + hw - 1, hy0 + 25, col)
+        draw_text(cv, x + 8, hy0 + 18, st['kicker'], SANS_F, 12,
                   (255, 255, 255))
-        # kicker line: place + topic, status pill right-aligned
-        kx, ky = x + 8, hy0 + 150
+        # scene below the band
+        st['scene'](cv, x + 1, hy0 + 25, hw - 2, 98)
+        # dateline: place + topic, status pill right-aligned
+        kx, ky = x + 8, hy0 + 137
         draw_text(cv, kx, ky, "%s \u00b7 %s" % (st['place'], st['topic']),
                   SANS_F, 10, col)
         ptxt = "\u2713 CONFIRMED" if st['status'] == 'CONFIRMED' else st['status']
         pw = int(text_width(ptxt, SANS_F, 9) + 10)
-        status_pill(cv, x + hw - 8 - pw, hy0 + 138, st['status'], SANS_F, 9)
-        # title (2 lines max), summary (2 lines), source
+        status_pill(cv, x + hw - 8 - pw, hy0 + 129, st['status'], SANS_F, 9)
+        # title (2 lines max), summary (2 lines, sources inline)
         lines, tsize = fit_lines(st['title'], SERIF_BOLD_F, 20, 16, hw - 16)
-        t_y = hy0 + 180 + max(0, 2 - len(lines)) * tsize * 1.28 / 2
+        t_y = hy0 + 162 + max(0, 2 - len(lines)) * tsize * 1.28 / 2
         draw_lines(cv, x + 8, t_y, lines, SERIF_BOLD_F, tsize, INK,
                    lh=tsize * 1.28)
         sl = wrap_text(st['summary'], SERIF_F, 11.5, hw - 16)
-        draw_lines(cv, x + 8, hy0 + 226, sl[:2], SERIF_F, 11.5, INK_SOFT, lh=14)
-        draw_text(cv, x + 8, hy0 + 252, "%d. %s \u2014 %s" % (st['no'], st['sources'],
-                  st['status']), SANS_F, 9, GREY)
-    # ---- medium cards, two rows of five
-    mw = 194
-    for r in range(2):
-        y0 = 452 + r * 178
-        y1 = y0 + 178
-        for c in range(5):
-            st = MEDIUM[r * 5 + c]
+        draw_lines(cv, x + 8, hy0 + 203, sl[:2], SERIF_F, 11.5, INK_SOFT, lh=14)
+    # ---- medium cards, three rows of four (130 px; round 11: #9's 12)
+    mw = 245
+    for r in range(3):
+        y0 = 402 + r * 130
+        y1 = y0 + 130
+        for c in range(4):
+            st = MEDIUM[r * 4 + c]
             x = MX + c * (mw + 8)
             cv.rect(x, y0, x + mw, y1, PAPER)
             cv.rect(x, y0, x + mw, y0 + 1, RULE)
             cv.rect(x, y1 - 1, x + mw, y1, RULE)
             cv.rect(x, y0, x + 1, y1, RULE)
             cv.rect(x + mw - 1, y0, x + mw, y1, RULE)
+            # kicker strip: "N PLACE — TOPIC" + status pill at the right
             col = REGION_COLOR[st['region']]
             cv.rect(x + 1, y0 + 1, x + mw - 1, y0 + 17, col)
             draw_text(cv, x + 7, y0 + 13, st['kicker'], SANS_F, 9,
                       (255, 255, 255))
-            # status lives in the source line below the summary, not here:
-            # the strip is too narrow for kicker + status without overlap.
-            st['scene'](cv, x + 1, y0 + 17, mw - 2, 56)
+            ptxt = "\u2713 CONFIRMED" if st['status'] == 'CONFIRMED' else st['status']
+            pw = int(text_width(ptxt, SANS_F, 8) + 10)
+            status_pill(cv, x + mw - 7 - pw, y0 + 3, st['status'], SANS_F, 8)
+            # scene with a small key-fact pill inside, bottom-left
+            st['scene'](cv, x + 1, y0 + 17, mw - 2, 44)
+            dark_scene = st['scene'] in (scene_bitcoin, scene_kryvyi)
+            pill_bg = (255, 255, 255) if dark_scene else DARK
+            pill_fg = INK if dark_scene else (255, 255, 255)
+            pill_w = int(text_width(st['pill'], SANS_F, 8) + 10)
+            cv.rect(x + 5, y0 + 47, x + 5 + pill_w, y0 + 59, pill_bg)
+            draw_text(cv, x + 10, y0 + 57, st['pill'], SANS_F, 8, pill_fg)
+            # title (2 lines max), summary (2 lines, sources inline)
             lines, tsize = fit_lines(st['title'], SERIF_BOLD_F, 17, 13, mw - 14)
-            t_y = y0 + 101 + max(0, 2 - len(lines)) * tsize * 1.28 / 2
+            t_y = y0 + 80 + max(0, 2 - len(lines)) * tsize * 1.28 / 2
             draw_lines(cv, x + 7, t_y, lines, SERIF_BOLD_F, tsize, INK,
                        lh=tsize * 1.28)
             sl = wrap_text(st['summary'], SERIF_F, 10, mw - 14)
-            draw_lines(cv, x + 7, y0 + 143, sl[:2], SERIF_F, 10, INK_SOFT,
+            draw_lines(cv, x + 7, y0 + 113, sl[:2], SERIF_F, 10, INK_SOFT,
                        lh=12)
-            draw_text(cv, x + 7, y0 + 170, "%d. %s \u2014 %s" % (st['no'],
-                      st['sources'], st['status']), SANS_F, 8, GREY)
-    # ---- map + ALSO ON (3 columns of 12/12/11)
-    y0, y1 = 810, 946
+    # ---- map + ALSO ON (2 columns of 12 + 11; round 11: #9's bottom third)
+    # 11.5 px rows: 10 px rows overlapped the 10 px type (first render).
+    y0, y1 = 792, 946
     draw_text(cv, MX, y0 + 11, "WHERE IT HAPPENED", SANS_F, 11, RED)
     draw_text(cv, MX + int(text_width("WHERE IT HAPPENED", SANS_F, 11)) + 8,
               y0 + 11, "pins match story numbers", SERIF_F, 9, INK_SOFT)
-    draw_map(cv, MX, y0 + 16, 260, y1 - y0 - 16)
-    ax = MX + 274
-    draw_text(cv, ax, y0 + 11, "ALSO ON SATURDAY 21 NOVEMBER 2026 \u2014 35 MORE",
+    draw_map(cv, MX, y0 + 16, 280, 138)
+    ax = MX + 292
+    draw_text(cv, ax, y0 + 11, "ALSO ON SATURDAY 21 NOVEMBER 2026 \u2014 23 MORE",
               SANS_F, 11, RED)
-    colw = (W - MX - ax) / 3.0
+    draw_text(cv, W - MX, y0 + 11, "Drawn in code \u00b7 No photographs",
+              SERIF_F, 9, GREY, align='r', slant=0.12)
+    colw = (W - MX - ax) / 2.0
     for i, (no, txt, src) in enumerate(ALSO_ON):
         col = i // 12
         row = i % 12
         bx = ax + col * colw
-        by = y0 + 15 + row * 10
-        draw_text(cv, bx, by + 8, str(no), SANS_F, 8.5, RED)
-        draw_text(cv, bx + 18, by + 8, "%s (%s)" % (txt, src), SERIF_F, 7,
-                  INK, track=-0.5)
+        by = y0 + 14 + row * 11.5
+        draw_text(cv, bx, by + 9, str(no), SANS_F, 10, RED)
+        lead, sep, rest = txt.partition(":")
+        lead = lead + ":" if sep else lead
+        lx = bx + 18
+        draw_text(cv, lx, by + 9, lead, SERIF_BOLD_F, 10, INK)
+        rx = lx + int(text_width(lead, SERIF_BOLD_F, 10))
+        draw_text(cv, rx, by + 9, rest, SERIF_F, 10, INK)
+        sx = rx + int(text_width(rest, SERIF_F, 10)) + 4
+        draw_text(cv, sx, by + 9, "(%s)" % src, SANS_F, 8.5, GREY)
     cv.hline(MX, W - MX, y1, RULE, 2)
-    # ---- DATE CHECK
-    y0, y1 = 948, 986
+    # ---- DATE CHECK (round 11: #9's red-framed strip, white inside)
+    y0, y1 = 948, 984
+    cv.rect(MX, y0, W - MX, y1, (255, 255, 255))
+    cv.rect(MX, y0, W - MX, y0 + 2, RED)
+    cv.rect(MX, y1 - 2, W - MX, y1, RED)
+    cv.rect(MX, y0, MX + 2, y1, RED)
+    cv.rect(W - MX - 2, y0, W - MX, y1, RED)
     lw = int(text_width("DATE CHECK", SANS_F, 10) + 12)
-    cv.rect(MX, y0 + 2, MX + lw, y0 + 18, RED)
-    draw_text(cv, MX + 6, y0 + 14, "DATE CHECK", SANS_F, 10, (255, 255, 255))
-    dl = wrap_text(DATE_CHECK, SERIF_F, 10.5, W - 2 * MX - lw - 12)
-    draw_lines(cv, MX + lw + 8, y0 + 14, dl[:2], SERIF_F, 10.5, INK, lh=13)
+    cv.rect(MX + 2, y0 + 2, MX + 2 + lw, y0 + 18, RED)
+    draw_text(cv, MX + 8, y0 + 14, "DATE CHECK", SANS_F, 10, (255, 255, 255))
+    dl = wrap_text(DATE_CHECK, SERIF_F, 11, W - 2 * MX - lw - 16)
+    draw_lines(cv, MX + lw + 10, y0 + 14, dl[:2], SERIF_F, 11, INK, lh=14)
     # ---- footer legend
     draw_text(cv, W // 2, 1000,
-              "HOW SURE   \u2713 CONFIRMED = 2+ major outlets   \u00b7   "
+              "HOW SURE ARE WE?   \u2713 CONFIRMED = 2+ major outlets   \u00b7   "
               "OFFICIAL = on the record   \u00b7   REPORTED = one major outlet",
               SERIF_F, 10, INK_SOFT, align='c')
     draw_text(cv, W // 2, 1016,
