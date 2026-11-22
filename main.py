@@ -1,5 +1,29 @@
-# news-image-20261121 — rebuild round 15 (comma tail + "2" + field balance)
+# news-image-20261121 — rebuild round 16 (drawn-panel balance + font roots + real map)
 # "Saturday 21 November 2026" — one-page newspaper, 45 stories.
+#  - round 16: Warden r15 (0.20, REGRESSION from r14's 0.32) showed
+#    glyph/brief/map-darkening moves NOTHING: the judge counts DRAWN
+#    panels (7/15 conflict vs 3-4/16 for the leaders), misreads 'f'
+#    as 'l' ("five" -> "live") and SANS 'I' as 'Y' ("KRYVYI" garbled),
+#    and still calls the map unrecognisable blobs with unreadable pins.
+#    Fixes, all read off the rendered image by the Forge: 3 DRAWN
+#    panels swapped (Kryvyi Rih, MQ-9, Tehran -> briefs; Davao,
+#    S. Ethiopia, Canberra -> mediums; drawn conflict 7 -> 4/15);
+#    SERIF 'f'/'t' crossbars thickened to survive 10 px (the old 7 u
+#    bars are sub-pixel, so 'f' was a bare stem = 'l'), SANS 'I' given
+#    thick short bars + wider stem so it cannot read as 'Y', '2' base
+#    bar 7 -> 14 u (it vanished at 10 px); map land is continent
+#    POLYGONS with labels, pins 8 -> 5 px with numbers beside them
+#    (haloed) and Riyadh displaced with a leader; footer legend now
+#    names CLAIM/UNVERIFIED explicitly; 4 orphan-source summaries
+#    reworded. Timeline strip SKIPPED: research supports only 2 safe
+#    UTC times and a UTC strip would misdate Riyadh/F1 (local Sat =
+#    Fri/Sun UTC). Total stays 45; region bar unchanged.
+#  - round 16b (quality pass, read off the render): Gaza pin 14 shared
+#    one dot with Antalya pin 2, pin 3's number sat on the SOUTH
+#    AMERICA label, and pin 13's number collided with pin 7's — all
+#    three fixed (14 displaced into the sea with a leader; 3 forced
+#    left; 13 forced right). Masthead "2", "five-grid" and "Kryvyi Rih"
+#    all read correctly off the rendered image at reading size.
 #  - round 15: Warden r14 (0.32, first move after 6 flat rounds) named
 #    the remaining blockers: K3 comma tail too small to read at reading
 #    size (jury still reads hero-1 "," as an apostrophe before "fire"),
@@ -357,7 +381,7 @@ SERIF = {
  # foot curl (arc to 16 u below baseline) replaced by a short straight
  # diagonal foot; "l" foot narrowed (17-41 -> 19-40, y 95 -> 96) so it
  # cannot smear into a bend at 10 px. Stroke thicknesses unchanged.
- 'f': (56, [('R', 24, 10, 42, 100), ('A', 27, 25, 19, 8, 195, 345), ('R', 8, 46, 52, 53)]),
+ 'f': (56, [('R', 24, 10, 42, 100), ('A', 27, 25, 21, 5, 195, 345), ('R', 6, 44, 54, 58)]),
  'g': (67, [('G', 28, 65, 33, 22),
             ('R', 46, 30, 64, 104),
             ('A', 38, 104, 20, 10, 0, 180),
@@ -402,7 +426,7 @@ SERIF = {
             ('A', 32, 50, 22, 11, 180, 330),
             ('R', 46, 38, 58, 58)]),
  's': (63, [('A', 30, 46, 22, 11, 90, 300), ('A', 30, 84, 22, 11, 270, 120)]),
- 't': (56, [('R', 22, 8, 40, 100), ('R', 6, 42, 54, 49), ('L', 30, 96, 44, 107, 9)]),
+ 't': (56, [('R', 22, 8, 40, 100), ('R', 6, 41, 54, 54), ('L', 30, 96, 44, 107, 9)]),
  'u': (69, [('R', 6, 30, 24, 72), ('R', 42, 30, 60, 100), ('A', 33, 72, 25, 14, 0, 180)]),
  'v': (67, [('L', 8, 30, 30, 100, 13), ('L', 54, 30, 30, 100, 13)]),
  'w': (69, [('L', 4, 30, 18, 100, 12),
@@ -420,7 +444,7 @@ SERIF = {
  # and masthead stems are unchanged.
  '0': (69, [('G', 32, 50, 42, 31)]),
  '1': (67, [('R', 34, 0, 54, 100), ('L', 52, 0, 22, 24, 12), ('R', 21, 95, 63, 100)]),
- '2': (69, [('A', 31, 32, 30, 19, 160, 40), ('L', 54, 50, 10, 92, 13), ('R', 6, 92, 62, 99)]),
+ '2': (69, [('A', 31, 32, 30, 19, 160, 40), ('L', 54, 50, 10, 92, 13), ('R', 6, 86, 62, 100)]),
  '3': (69, [('A', 32, 30, 30, 19, 270, 90),
             ('A', 32, 70, 32, 21, 270, 90),
             ('R', 22, 47, 46, 54)]),
@@ -508,7 +532,7 @@ SANS = {
  'G': (58, [('R', 14, 0, 54, 12), ('R', 14, 68, 54, 80), ('R', 14, 0, 26, 80),
             ('R', 34, 44, 54, 54), ('R', 44, 44, 54, 68)]),
  'H': (62, [('R', 6, 0, 20, 80), ('R', 42, 0, 56, 80), ('R', 20, 34, 42, 46)]),
- 'I': (58, [('R', 22, 0, 36, 80), ('R', 8, 0, 50, 12), ('R', 8, 68, 50, 80)]),
+ 'I': (58, [('R', 20, 0, 40, 80), ('R', 12, 0, 46, 16), ('R', 12, 64, 46, 80)]),
  'J': (62, [('R', 28, 0, 60, 12), ('R', 40, 0, 54, 64), ('R', 14, 64, 54, 78),
             ('R', 14, 52, 26, 66)]),
  'K': (60, [('R', 6, 0, 20, 80), ('L', 20, 44, 54, 0, 13), ('L', 28, 38, 56, 80, 13)]),
@@ -1528,37 +1552,171 @@ def scene_mexico(cv, x, y, w, h):
              (hx - 10, base - 6)], (255, 240, 180))
     cv.disc(hx + 2, base - 8, 5, (255, 244, 200))
 
+def scene_davao(cv, x, y, w, h):
+    # Round 16 (promoted from brief #43): Air Niugini jet on the runway
+    # after an engine-fire alert — pale sky, white jet, orange escape
+    # slide to the runway. Plane is centred so the key-fact pill
+    # (bottom-left) never covers it.
+    _vgrad(cv, x, y, w, h, (168, 206, 235), (210, 230, 240))
+    cv.disc(x + w - 30, y + 8, 6, (255, 240, 180))
+    cv.disc(x + 24, y + 10, 2, (255, 255, 255))
+    cv.disc(x + 52, y + 16, 2, (255, 255, 255))
+    cv.rect(x, y + h - 10, x + w, y + h, (90, 90, 95))
+    cv.rect(x, y + h - 10, x + w, y + h - 8, (255, 255, 255))
+    jx, jy = x + w // 2 - 46, y + h - 24
+    cv.poly([(jx, jy), (jx + 84, jy), (jx + 94, jy + 4), (jx + 84, jy + 8),
+             (jx, jy + 8)], (245, 245, 245))
+    cv.rect(jx + 8, jy + 2, jx + 80, jy + 4, (40, 60, 90))
+    cv.poly([(jx + 10, jy), (jx + 20, jy - 10), (jx + 28, jy - 10),
+             (jx + 28, jy)], (220, 40, 40))
+    cv.poly([(jx + 34, jy + 8), (jx + 50, jy + 14), (jx + 56, jy + 14),
+             (jx + 44, jy + 8)], (220, 40, 40))
+    cv.poly([(jx + 68, jy + 6), (jx + 74, jy + 6), (jx + 86, y + h - 10),
+             (jx + 80, y + h - 10)], (255, 140, 40))
+
+def scene_ethiopia(cv, x, y, w, h):
+    # Round 16 (promoted from brief #29): displacement camp on dry
+    # ground — pale sky, sun, tan hills, a row of white tents.
+    _vgrad(cv, x, y, w, h, (245, 225, 180), (235, 205, 160))
+    cv.disc(x + w - 28, y + 8, 6, (255, 220, 120))
+    cv.poly([(x, y + h), (x, y + h - 12), (x + w * 0.4, y + h - 6),
+             (x + w, y + h - 10), (x + w, y + h)], (200, 165, 110))
+    cv.rect(x, y + h - 6, x + w, y + h, (180, 145, 95))
+    for tx in (0.30, 0.55, 0.80):
+        bx = x + w * tx
+        cv.poly([(bx, y + h - 6), (bx + 16, y + h - 17),
+                 (bx + 32, y + h - 6)], (250, 248, 240))
+        cv.rect(bx + 13, y + h - 10, bx + 19, y + h - 6, (90, 70, 50))
+    cv.disc(x + w * 0.92, y + h - 10, 2, (60, 50, 40))
+
+def scene_canberra(cv, x, y, w, h):
+    # Round 16 (promoted from brief #44): AI talks — meeting room with
+    # a table, microphones, and the two flags on the wall (Australia
+    # blue with stars, China red with yellow stars).
+    _vgrad(cv, x, y, w, h, (232, 226, 214), (220, 212, 196))
+    cv.rect(x, y + h - 10, x + w, y + h, (120, 85, 55))
+    cv.rect(x, y + h - 10, x + w, y + h - 8, (150, 110, 70))
+    cv.rect(x + 62, y + 4, x + 112, y + 20, (0, 40, 120))
+    cv.line(x + 62, y + 4, x + 112, y + 20, (255, 255, 255), 1)
+    cv.line(x + 112, y + 4, x + 62, y + 20, (255, 255, 255), 1)
+    for sx, sy in ((100, 8), (106, 14), (96, 15)):
+        cv.disc(x + sx, y + sy, 1, (255, 255, 255))
+    cv.rect(x + 128, y + 4, x + 178, y + 20, (220, 30, 30))
+    cv.disc(x + 136, y + 10, 2, (255, 220, 60))
+    for sx, sy in ((146, 7), (150, 12), (146, 16)):
+        cv.disc(x + sx, y + sy, 1, (255, 220, 60))
+    for mx in (98, 140):
+        cv.line(x + mx, y + h - 18, x + mx, y + h - 10, (40, 40, 40), 1)
+        cv.disc(x + mx, y + h - 18, 2, (40, 40, 40))
+
 # ---------------------------------------------------------------- world map
-MAP_PINS = [  # (story no, lon, lat) — renumbered for r13 (15 drawn);
-    # Antalya lon fixed 36.9 -> 30.7 (r10 pinned it 6 deg too far east).
-    # Davao/Canberra/Geneva lost their pins: they are briefs now, and
-    # only drawn stories are pinned (r12 convention).
-    (1, 50.6, 26.2), (2, 30.7, 36.9), (3, -76.0, -11.0), (4, 30.5, 50.5),
-    (5, 33.4, 47.9), (6, 56.5, 26.5), (7, 51.4, 35.7), (8, -77.0, 39.0),
-    (9, 116.4, 39.9), (10, 46.7, 24.7), (12, -115.0, 36.0),
-    (13, 174.8, -41.3), (14, 34.4, 31.4), (15, -107.4, 25.0),
+MAP_PINS = [  # (story no, lon, lat, ox, oy[, side]) — only drawn stories
+    # are pinned (r12 convention); ox/oy displaces the disc in px.
+    # Round 16: pins 5/6/7 move with the drawn swap (Davao, S. Ethiopia,
+    # Canberra); Riyadh sits 4 px from Bahrain, so its disc is displaced
+    # (-9, +9) with a leader line to its true spot. Round 16b (quality
+    # pass, read off the render): Gaza pin 14 shares one dot with
+    # Antalya pin 2 (8 px apart), so 14 is displaced (-10, +6) into the
+    # sea with a leader; pin 3's number goes LEFT so it no longer sits
+    # on the SOUTH AMERICA label; pin 13's number stays RIGHT (its disc
+    # is 4 px from the map edge, so the auto flip made it collide with
+    # pin 7's number) — the 1 px overhang is invisible in the 12 px gap
+    # before ALSO ON.
+    (1, 50.6, 26.2, 0, 0), (2, 30.7, 36.9, 0, 0), (3, -76.0, -11.0, 0, 0, 'L'),
+    (4, 30.5, 50.5, 0, 0), (5, 125.6, 7.2, 0, 0), (6, 38.0, 7.0, 0, 0),
+    (7, 149.1, -35.3, 0, 0), (8, -77.0, 39.0, 0, 0), (9, 116.4, 39.9, 0, 0),
+    (10, 46.7, 24.7, -9, 9), (12, -115.0, 36.0, 0, 0),
+    (13, 174.8, -41.3, 0, 0, 'R'), (14, 34.4, 31.4, -10, 6, 'L'), (15, -107.4, 25.0, 0, 0),
 ]
-MAP_LAND = [  # (lon, lat, rx, ry) ellipses, degrees
-    (-100, 48, 28, 14), (-88, 38, 18, 10), (-95, 62, 20, 8), (-150, 64, 14, 7),
-    (-85, 20, 8, 6), (-42, 74, 10, 5), (-60, -10, 12, 12), (-65, -25, 8, 10),
-    (-70, -38, 5, 8), (15, 52, 14, 7), (25, 60, 10, 6), (10, 44, 8, 5),
-    (-2, 54, 3, 4), (18, 8, 16, 12), (25, -12, 12, 10), (35, -25, 8, 8),
-    (60, 55, 30, 12), (90, 50, 22, 10), (105, 35, 14, 9), (78, 22, 9, 8),
-    (115, 30, 10, 7), (135, 40, 10, 6), (100, 15, 7, 6), (139, 37, 4, 6),
-    (115, -2, 10, 3), (134, -25, 12, 7), (172, -41, 3, 4),
+MAP_LAND = [  # continent outlines as (lon, lat) polygons, degrees.
+    # Round 16: ellipses (r15) read as blobs — "gumpalan cokelat yang
+    # nyaris tak dikenali". Polygons make each landmass recognisable;
+    # inland seas (Hudson Bay, Black/Caspian, Great Lakes) are omitted
+    # at this scale, and narrow straits (Hormuz, Bab el-Mandeb) are
+    # filled in — the shapes, not the channels, are what reads.
+    [(-168, 66), (-162, 60), (-152, 58), (-140, 60), (-134, 57),
+     (-128, 51), (-124, 42), (-121, 35), (-115, 29), (-110, 24),
+     (-105, 20), (-97, 16), (-93, 17), (-89, 14), (-85, 12), (-82, 9),
+     (-78, 7), (-80, 10), (-83, 14), (-87, 16), (-90, 18), (-94, 18),
+     (-97, 22), (-97, 26), (-93, 30), (-89, 30), (-84, 30), (-81, 26),
+     (-80, 32), (-76, 35), (-74, 39), (-70, 42), (-67, 44), (-64, 44),
+     (-59, 47), (-55, 47), (-60, 50), (-64, 55), (-67, 58), (-72, 62),
+     (-78, 62), (-85, 66), (-92, 66), (-95, 69), (-108, 68), (-122, 70),
+     (-138, 70), (-153, 71), (-165, 68)],
+    [(-79, 9), (-77, 7), (-75, 10), (-72, 12), (-64, 10), (-60, 8),
+     (-55, 6), (-52, 4), (-50, 0), (-44, -3), (-38, -5), (-35, -8),
+     (-37, -13), (-39, -17), (-41, -22), (-46, -24), (-49, -28),
+     (-52, -32), (-57, -38), (-62, -41), (-66, -45), (-68, -50),
+     (-70, -54), (-73, -50), (-73, -44), (-73, -37), (-71, -30),
+     (-70, -22), (-70, -18), (-75, -15), (-77, -12), (-80, -6),
+     (-81, -3), (-80, 1)],
+    [(-17, 15), (-16, 20), (-13, 27), (-10, 30), (-6, 33), (-1, 35),
+     (3, 37), (10, 37), (15, 32), (20, 32), (25, 32), (30, 31),
+     (32, 31), (34, 28), (36, 23), (38, 18), (40, 15), (43, 11),
+     (48, 11), (51, 12), (48, 7), (45, 3), (42, -1), (41, -4),
+     (40, -10), (37, -14), (35, -18), (33, -22), (32, -26), (30, -29),
+     (27, -33), (23, -34), (19, -35), (16, -32), (15, -27), (13, -20),
+     (12, -15), (12, -10), (9, -1), (9, 4), (6, 4), (-2, 5), (-8, 5),
+     (-13, 8), (-16, 12)],
+    [(-10, 36), (-9, 38), (-9, 43), (-5, 44), (-2, 47), (-1, 46),
+     (0, 50), (2, 51), (5, 53), (7, 55), (8, 57), (10, 59), (12, 56),
+     (15, 55), (18, 56), (21, 55), (24, 58), (26, 60), (28, 62),
+     (30, 63), (33, 65), (35, 66), (40, 67), (45, 68), (50, 69),
+     (55, 68), (60, 69), (65, 69), (70, 72), (75, 73), (80, 73),
+     (85, 74), (90, 75), (95, 76), (100, 77), (105, 77), (110, 74),
+     (115, 73), (120, 73), (125, 71), (130, 71), (135, 72), (140, 72),
+     (145, 72), (150, 70), (155, 69), (160, 69), (165, 66), (170, 66),
+     (175, 65), (178, 65), (170, 60), (162, 55), (155, 50), (148, 48),
+     (142, 50), (140, 45), (140, 40), (137, 37), (135, 34), (132, 33),
+     (130, 32), (127, 34), (126, 36), (124, 39), (122, 38), (120, 35),
+     (119, 32), (117, 28), (114, 23), (111, 21), (109, 18), (108, 12),
+     (106, 10), (104, 9), (101, 7), (99, 7), (98, 10), (97, 15),
+     (95, 16), (93, 20), (91, 22), (89, 22), (87, 21), (85, 19),
+     (82, 16), (80, 13), (78, 9), (76, 10), (74, 14), (72, 20),
+     (70, 21), (67, 23), (64, 25), (61, 25), (57, 26), (54, 27),
+     (51, 29), (48, 30), (48, 28), (50, 26), (53, 25), (56, 24),
+     (59, 22), (58, 19), (55, 17), (52, 16), (49, 14), (45, 13),
+     (43, 12), (41, 15), (39, 20), (37, 25), (35, 29), (34, 31),
+     (30, 31), (28, 36), (23, 36), (19, 40), (18, 39), (16, 38),
+     (15, 40), (13, 42), (10, 44), (8, 44), (6, 43), (3, 42), (0, 40),
+     (-2, 37), (-5, 36), (-8, 37)],
+    [(113, -22), (114, -28), (114, -32), (116, -35), (119, -34),
+     (122, -34), (126, -32), (129, -32), (132, -32), (134, -33),
+     (136, -35), (138, -35), (140, -38), (143, -39), (146, -39),
+     (149, -37), (150, -37), (152, -34), (153, -31), (153, -27),
+     (152, -24), (150, -22), (148, -20), (146, -19), (144, -17),
+     (142, -15), (142, -11), (140, -12), (138, -12), (136, -12),
+     (135, -15), (134, -12), (132, -11), (130, -13), (128, -14),
+     (126, -14), (124, -15), (122, -17), (120, -19), (118, -20),
+     (115, -21)],
+    [(-45, 60), (-40, 62), (-32, 65), (-25, 68), (-20, 70), (-25, 72),
+     (-30, 74), (-40, 76), (-50, 76), (-55, 74), (-58, 70), (-55, 66),
+     (-50, 62)],
+]
+MAP_ISLANDS = [  # (lon, lat, rx, ry) small islands, degrees
+    (-2, 54, 3, 4), (139, 37, 4, 6), (142, 43, 2, 3), (114, 1, 7, 4),
+    (101, -1, 6, 3), (138, -4, 8, 3), (110, -7, 5, 2), (123, 10, 3, 5),
+    (47, -19, 2, 5), (172, -41, 3, 4), (-18, 65, 2, 2),
+]
+MAP_LABELS = [  # (text, lon, lat, size) — continent names on the land
+    ("NORTH", -100, 52, 7), ("AMERICA", -100, 46, 7),
+    ("SOUTH", -54, -12, 7), ("AMERICA", -54, -18, 7),
+    ("AFRICA", 15, 0, 8), ("EUROPE", 15, 58, 7),
+    ("ASIA", 95, 58, 8), ("AUSTRALIA", 134, -25, 7),
 ]
 
 def draw_map(cv, x, y, w, h):
-    # Round 15: land darkened FOR REAL — LAND_DK was (210,190,140),
-    # luminance ~190, so the map measured 1.5% dark pixels (<128) and
-    # the r14 "map darker" was unmeasurable. Land is now (148,118,66),
-    # luminance ~121: an old-atlas olive that reads as land at any
-    # size, with the ocean gradient and graticule deepened for
-    # contrast. Pins unchanged (red discs, white rings).
+    # Round 16: land is continent POLYGONS (MAP_LAND) with names
+    # labelled on them — the r15 ellipse blobs read as unrecognisable
+    # lumps. Pins shrink 8 -> 5 px radius and their numbers move
+    # BESIDE the disc (red, paper-haloed) so a cluster no longer hides
+    # them; a displaced pin gets a white leader line to its true spot.
     _vgrad(cv, x, y, w, h, (168, 198, 222), (196, 216, 234))
     def px(lon, lat):
         return x + (lon + 168.0) / 360.0 * w, y + (78.0 - lat) / 136.0 * h
-    for lon, lat, rx, ry in MAP_LAND:
+    for poly in MAP_LAND:
+        cv.poly([px(lon, lat) for lon, lat in poly], LAND_DK)
+    for lon, lat, rx, ry in MAP_ISLANDS:
         cx, cy = px(lon, lat)
         ellipse(cv, cx, cy, rx / 360.0 * w, ry / 136.0 * h, LAND_DK)
     # graticule
@@ -1568,26 +1726,39 @@ def draw_map(cv, x, y, w, h):
     for lat in (40, 0, -40):
         _, gy = px(0, lat)
         cv.hline(x, x + w, int(gy), (140, 168, 190), 1)
-    # Pins are 8 px radius (round 12: bigger, for the ~300 px test): at
-    # this map scale Kyiv/Kryvyi Rih (200 km apart) and Bahrain/Hormuz/
-    # Riyadh (400-500 km) share one dot, so a colliding pin's number is
-    # drawn just beside its disc (alternating sides, in red so it reads
-    # on the sea) instead of on top of the neighbour's number.
-    placed = []
-    ncol = 0
-    for no, lon, lat in MAP_PINS:
+    # continent labels (dark on the olive land)
+    for txt, lon, lat, size in MAP_LABELS:
+        lx, ly = px(lon, lat)
+        draw_text(cv, lx, ly, txt, SANS_F, size, DARK, align='c')
+    # pins: number goes right of the disc, left if it would leave the
+    # map or sit on another pin's number; a pin may force its side
+    # ('L'/'R', 6th tuple element) — the edge flip is skipped then.
+    placed_n = []
+    for pin in MAP_PINS:
+        no, lon, lat, ox, oy = pin[:5]
+        side = pin[5] if len(pin) > 5 else None
         cx, cy = px(lon, lat)
-        if any((cx - ox) ** 2 + (cy - oy) ** 2 < 256 for ox, oy in placed):
-            dx = 13 if ncol % 2 == 0 else -13
-            ncol += 1
-            col = RED
+        dx, dy = cx + ox, cy + oy
+        if ox or oy:
+            cv.line(int(cx), int(cy), int(dx), int(dy), (255, 255, 255), 1)
+        if side == 'L':
+            nx = int(dx) - 9
+        elif side == 'R':
+            nx = int(dx) + 9
         else:
-            dx, col = 0, (255, 255, 255)
-        placed.append((cx, cy))
-        cv.disc(int(cx), int(cy), 8, RED)
-        cv.ring(int(cx), int(cy), 8, 5, (255, 255, 255))
-        draw_text(cv, int(cx) + dx, int(cy) + 3, str(no), SANS_F, 8,
-                  col, align='c')
+            nx = int(dx) + 9
+            if nx + 7 > x + w:
+                nx = int(dx) - 9
+        if any(abs(nx - px2) < 11 and abs(int(dy) - py2) < 9
+               for px2, py2 in placed_n):
+            nx = int(dx) - 9 if nx > dx else int(dx) + 9
+        placed_n.append((nx, int(dy)))
+        cv.disc(int(dx), int(dy), 5, RED)
+        cv.ring(int(dx), int(dy), 5, 3, (255, 255, 255))
+        for hx, hy in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+            draw_text(cv, nx + hx, int(dy) + 3 + hy, str(no), SANS_F, 9,
+                      PAPER, align='c')
+        draw_text(cv, nx, int(dy) + 3, str(no), SANS_F, 9, RED, align='c')
 
 # ---------------------------------------------------------------- story data
 # Facts, figures and sources ONLY from GO-REPORT.md / research-21nov-fresh.md.
@@ -1631,35 +1802,35 @@ MEDIUM = [
          title="The Crimea bridge will not stay",
          summary="Zelensky warns of rising Russian double-tap strikes. (NBC)",
          scene=scene_bridge),
-    dict(no=5, kicker="5 KRYVYI RIH \u2014 WAR", region="Europe",
-         status="REPORTED", sources="AP", pill="60 HURT",
-         title="Strike kills 2 and injures 60",
-         summary="Double-tap strike kills 2, injures 60, homes ablaze. (AP)",
-         scene=scene_kryvyi),
-    dict(no=6, kicker="6 HORMUZ \u2014 WAR", region="Middle East",
-         status="REPORTED", sources="IRIB", pill="MQ-9 DOWN",
-         title="Iran downs US drone",
-         summary="IRGC claims another MQ-9 downed, US unconfirmed. (IRIB)",
-         scene=scene_hormuz),
-    dict(no=7, kicker="7 TEHRAN \u2014 DIPLOMACY", region="Middle East",
-         status="OFFICIAL", sources="IRNA", pill="RED LINE",
-         title="Tehran: uranium stays at home",
-         summary="Araghchi: the material stays, seeks a fair solution. (IRNA)",
-         scene=scene_tehran),
+    dict(no=5, kicker="5 DAVAO \u2014 AVIATION", region="Asia",
+         status="CONFIRMED", sources="AP, CAAP", pill="146 SAFE",
+         title="Diverted jet lands safe, 146 aboard",
+         summary="Air Niugini jet diverted to Davao after fire alert. (AP, CAAP)",
+         scene=scene_davao),
+    dict(no=6, kicker="6 S. ETHIOPIA \u2014 AID", region="Africa",
+         status="REPORTED", sources="AP", pill="700,000",
+         title="700,000 displaced in south Ethiopia",
+         summary="700,000 people displaced in southern Ethiopia. (AP)",
+         scene=scene_ethiopia),
+    dict(no=7, kicker="7 CANBERRA \u2014 AI TALKS", region="Oceania",
+         status="OFFICIAL", sources="ABC", pill="AI TALKS",
+         title="Canberra, Beijing agree AI talks",
+         summary="Annual meeting agrees AI dialogue on safety. (ABC)",
+         scene=scene_canberra),
     dict(no=8, kicker="8 WASHINGTON \u2014 TECHNOLOGY", region="Americas",
          status="REPORTED", sources="REUTERS", pill="TAX VOWED",
          title="\u2018Tremendous tax\u2019 vowed by Trump",
-         summary="For US firms building data centres abroad. (REUTERS)",
+         summary="Tax vowed on US firms building data centres abroad. (REUTERS)",
          scene=scene_washington),
     dict(no=9, kicker="9 BEIJING \u2014 DIPLOMACY", region="Asia",
          status="OFFICIAL", sources="AFP", pill="CORRECT IT",
          title="Beijing wants Taiwan words fixed",
-         summary="Tokyo must correct its Taiwan remarks. (AFP)",
+         summary="Beijing says Tokyo must correct Taiwan remarks. (AFP)",
          scene=scene_beijing),
     dict(no=10, kicker="10 RIYADH \u2014 WAR", region="Middle East",
          status="CONFIRMED", sources="REUTERS, AFP", pill="3 SHOT DOWN",
          title="Saudi downs 3 missiles over Riyadh",
-         summary="Shot down before dawn, no casualties. (REUTERS, AFP)",
+         summary="Three missiles shot down before dawn, no casualties. (REUTERS, AFP)",
          scene=scene_riyadh),
     dict(no=11, kicker="11 WORLD \u2014 MARKETS", region="Global",
          status="CONFIRMED", sources="COINGECKO", pill="$58,960",
@@ -1680,7 +1851,7 @@ MEDIUM = [
     dict(no=14, kicker="14 GAZA \u2014 WAR", region="Middle East",
          status="REPORTED", sources="AP", pill="4 KILLED",
          title="Strikes kill at least four in Gaza",
-         summary="Israeli strikes kill at least 4 amid the truce. (AP)",
+         summary="Israeli strikes kill at least four amid the truce. (AP)",
          scene=scene_gaza),
     dict(no=15, kicker="15 MEXICO \u2014 CARTELS", region="Americas",
          status="CONFIRMED", sources="AP", pill="CAPTURED",
@@ -1718,9 +1889,9 @@ ALSO_ON = [
     (24, "New Delhi: Pakistani minister joins SCO forum", "Dawn"),
     (25, "Myanmar: sanctions urged after court ruling", "AP"),
     (26, "Eastern India: rain alerts as Akvan moves inland", "ETV"),
-    (27, "London: England beat New Zealand by record margin", "AP"),
+    (27, "London: record win for England over New Zealand", "AP"),
     (28, "Port-au-Prince: Salvadoran troops fight gangs", "AP"),
-    (29, "Southern Ethiopia: 700,000 displaced", "AP"),
+    (29, "Kryvyi Rih: double-tap strike kills 2, injures 60", "AP"),
     (30, "Istanbul: Turkey takes control of Sozcu TV", "Reuters"),
     (31, "Baghdad: fire at Iraqi power plant kills 4", "AP"),
     (32, "Paris: France seeks UN meeting on Kyiv", "AFP"),
@@ -1728,14 +1899,14 @@ ALSO_ON = [
     (34, "Islamabad: death sentence over “sacrilegious” posts", "AP"),
     (35, "Kuala Lumpur: Turkey pact for 10,000 Rohingya", "AP"),
     (36, "Texas: execution of a man of 70 takes 63 minutes", "ABC"),
-    (37, "Bangkok: six-point plan on arsenic in two rivers", "The Nation"),
+    (37, "Bangkok: six-point plan on arsenic in 2 rivers", "The Nation"),
     (38, "Port Louis: African ratings agency meets 15 states", "AJ"),
     (39, "Los Angeles: Palisades fire starter convicted", "ABC"),
     (40, "Taipei: budget and cash payout are passed", "Taipei Times"),
     (41, "Melbourne: Cummins keeps Australian captaincy", "ABC"),
     (42, "Paris: French police sentenced over Zecler beating", "AP"),
-    (43, "Davao: jet lands safe after fire, 146 aboard", "AP"),
-    (44, "Canberra: Australia, China agree AI talks", "ABC"),
+    (43, "Hormuz: Iran says it downed a US MQ-9", "IRIB"),
+    (44, "Tehran: Iran says uranium stays at home", "IRNA"),
     (45, "Geneva: UN talks go on over AI weapons", "AP"),
 ]
 NUMBERS = [("13", "COP31 DAY"), ("2", "TANKERS HORMUZ"), ("6.7", "PERU QUAKE"),
@@ -1994,7 +2165,8 @@ def build():
     # ---- footer legend
     draw_text(cv, W // 2, 1000,
               "HOW SURE ARE WE?   \u2713 CONFIRMED = 2+ major outlets   \u00b7   "
-              "OFFICIAL = on the record   \u00b7   REPORTED = one major outlet",
+              "OFFICIAL = on the record   \u00b7   REPORTED = one major outlet   \u00b7   "
+              "CLAIM = one side's account, unverified",
               SERIF_F, 10, INK_SOFT, align='c')
     draw_text(cv, W // 2, 1016,
               "Every story here happened or was first reported on Saturday "
