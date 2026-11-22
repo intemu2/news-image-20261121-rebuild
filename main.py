@@ -1,5 +1,25 @@
-# news-image-20261121 — rebuild round 13 (duel fixes: fewer, bigger panels)
+# news-image-20261121 — rebuild round 14 (font-engine fix)
 # "Saturday 21 November 2026" — one-page newspaper, 45 stories.
+#  - round 14: ONE variable only — the punctuation rendering. Five rounds
+#    (r7/r9/r11/r12/r13) scored a flat 0.20-0.24 in blind duels; layout,
+#    panel count and headline size never moved it. The duel judge kept
+#    reading our punctuation as broken ("plant; fire" -> "plant 'ire",
+#    "Tremendous tax'" broken, footer letters clipped). Diagnosis (pixel
+#    level, /tmp/diag14.py): _thicken_prim fattened every punctuation
+#    stroke to 19 u, merging the two strokes of '"' into ONE solid blob
+#    and turning "'" into a wedge as wide as a letter stem; '.' and ':'
+#    were 1-2 px specks at 10-11 px; ';' was 3 disconnected specks in a
+#    2 px column. Fix: punctuation glyphs redrawn (dots r 9-10, quote
+#    strokes thin and separated, ';' tail thin so it cannot swallow its
+#    lower dot) and EXEMPTED from letter thickening via SERIF_BOLD_PUNCT;
+#    punctuation gets a wider side bearing so it cannot crowd the next
+#    letter. Letters untouched (masthead stem mode/median still 12/12 px
+#    like #1). Copy: ';' -> ',' in the 10 story summaries/briefs (the
+#    exact misread string and its siblings; facts unchanged) — DATE CHECK
+#    keeps its ';' list separators. Layout, story set (45), region bar
+#    and map geometry UNCHANGED. Map darkened slightly (LAND_DK, deeper
+#    ocean/graticule — it was 1.5% dark pixels at full size). Dead scenes
+#    scene_davao/scene_canberra/scene_geneva removed (~140 lines).
 #  - round 13: 18 -> 15 drawn panels (3 rows x 4, 243 px wide, 19 px
 #    headlines) — the r12 duel judge said the winners have 13-16 LARGE
 #    panels with big headlines while ours were "very dense and small";
@@ -401,15 +421,35 @@ SERIF = {
  '7': (67, [('R', 6, 2, 62, 9), ('L', 56, 8, 26, 100, 13)]),
  '8': (69, [('G', 32, 32, 30, 19), ('G', 32, 70, 32, 21)]),
  '9': (69, [('G', 32, 34, 34, 23), ('R', 41, 44, 61, 100)]),
- '.': (34, [('D', 30, 96, 6)]),
- ',': (34, [('D', 30, 96, 6), ('L', 30, 100, 22, 116, 8)]),
- "'": (30, [('L', 28, 2, 20, 28, 10)]),
- '’': (30, [('L', 28, 2, 20, 28, 10)]),
- '"': (44, [('L', 20, 2, 12, 28, 9), ('L', 38, 2, 30, 28, 9)]),
- ':': (34, [('D', 30, 42, 6), ('D', 30, 92, 6)]),
- ';': (34, [('D', 30, 42, 6), ('D', 30, 92, 6), ('L', 30, 96, 22, 114, 8)]),
- '!': (40, [('R', 23, 0, 41, 72), ('D', 32, 92, 7)]),
- '?': (58, [('A', 32, 32, 28, 17, 150, 30), ('L', 46, 50, 32, 72, 12), ('D', 32, 92, 7)]),
+ # Round 14: punctuation redrawn — dots r 9 (was 6: a 1.2 px speck at
+ # 10 px); "'" is a dot + short tail (a real curly apostrophe, was a
+ # straight 10 u slash); '"' is two such marks with a clear gap (was two
+ # strokes that merged when thickened); ';' tail starts just under its
+ # lower dot so the two merge into one comma (was a fat tail swallowing
+ # the dot). ',' tail is thin (9 u) and reaches further down-left.
+ '.': (34, [('D', 30, 95, 9)]),
+ ',': (34, [('D', 30, 95, 9), ('L', 30, 99, 21, 117, 9)]),
+ "'": (30, [('D', 27, 9, 8), ('L', 27, 13, 19, 30, 8)]),
+ '’': (30, [('D', 27, 9, 8), ('L', 27, 13, 19, 30, 8)]),
+ '"': (52, [('D', 12, 9, 8), ('L', 12, 11, 4, 30, 9),
+            ('D', 40, 9, 8), ('L', 40, 11, 32, 30, 9)]),
+ # Round 14: these four were MISSING from SERIF entirely, so they rendered
+ # as blank space in every round — the opening quote of 'Tremendous tax'
+ # and 'El Chapo Isidro' never printed (only the closing one did, which
+ # is why the judge read the quote as a stray broken mark), the double
+ # quotes in briefs #17/#34 never printed, and the '=' in the footer
+ # legend ("CONFIRMED = 2+") was a hole. '‘' mirrors '’'; '“'/'”' are
+ # doubled; '=' copies the SANS bars.
+ '‘': (30, [('D', 27, 9, 8), ('L', 27, 13, 35, 30, 8)]),
+ '“': (52, [('D', 12, 9, 8), ('L', 12, 13, 20, 30, 8),
+            ('D', 40, 9, 8), ('L', 40, 13, 48, 30, 8)]),
+ '”': (52, [('D', 12, 9, 8), ('L', 12, 11, 4, 30, 9),
+            ('D', 40, 9, 8), ('L', 40, 11, 32, 30, 9)]),
+ '=': (58, [('R', 8, 32, 50, 42), ('R', 8, 50, 50, 60)]),
+ ':': (34, [('D', 30, 42, 9), ('D', 30, 92, 9)]),
+ ';': (34, [('D', 30, 42, 9), ('D', 30, 92, 9), ('L', 30, 97, 21, 115, 9)]),
+ '!': (40, [('R', 23, 0, 41, 72), ('D', 32, 92, 8)]),
+ '?': (58, [('A', 32, 32, 28, 17, 150, 30), ('L', 46, 50, 32, 72, 12), ('D', 32, 92, 8)]),
  '-': (60, [('R', 8, 60, 52, 67)]),
  '–': (66, [('R', 4, 60, 62, 67)]),
  '—': (74, [('R', 2, 60, 72, 67)]),
@@ -423,15 +463,15 @@ SERIF = {
  '/': (52, [('L', 48, 0, 16, 100, 11)]),
  '+': (64, [('R', 26, 28, 38, 72), ('R', 12, 44, 52, 56)]),
  '*': (56, [('L', 30, 8, 30, 52, 8), ('L', 11, 20, 49, 40, 8), ('L', 49, 20, 11, 40, 8)]),
- '•': (40, [('D', 30, 58, 8)]),
+ '•': (40, [('D', 30, 58, 10)]),  # round 14: r 10 (was 8)
  '◆': (56, [('R', 26, 38, 34, 46),
             ('R', 18, 46, 42, 54),
             ('R', 12, 54, 48, 62),
             ('R', 18, 62, 42, 70),
             ('R', 26, 70, 34, 78)]),
- '✓': (60, [('L', 8, 58, 26, 78, 10), ('L', 26, 78, 54, 30, 10)]),
+ '✓': (60, [('L', 8, 58, 26, 78, 13), ('L', 26, 78, 54, 30, 13)]),  # r14: w 13 (was 10)
  '°': (44, [('G', 30, 22, 12, 6)]),
- '·': (40, [('D', 30, 58, 6)]),
+ '·': (40, [('D', 30, 58, 9)]),  # round 14: r 9 (was 6 — a 0.6 px speck at 10 px)
  ' ': (30, []),
 }
 SERIF_CELL, SERIF_BASE = 125, 100
@@ -497,6 +537,13 @@ SANS = {
  '.': (32, [('D', 30, 70, 6)]),
  ',': (32, [('D', 30, 70, 6), ('L', 30, 74, 22, 86, 7)]),
  '-': (56, [('R', 8, 36, 48, 46)]),
+ # Round 14: '—' and '✓' were MISSING from SANS, so they rendered as
+ # blank space — every medium kicker ("6 HORMUZ — WAR") and the ALSO ON
+ # header lost their em dash, and every "✓ CONFIRMED" pill lost its
+ # checkmark. '—' is a 12 u bar at mid-cap (SANS bar weight); '✓' mirrors
+ # the SERIF check in SANS proportions (cap height 80).
+ '—': (70, [('R', 2, 34, 58, 46)]),
+ '✓': (60, [('L', 8, 46, 22, 64, 12), ('L', 22, 64, 50, 22, 12)]),
  '/': (52, [('L', 44, 0, 12, 80, 10)]),
  '%': (60, [('G', 18, 22, 14, 7), ('G', 40, 58, 14, 7), ('L', 48, 4, 10, 76, 8)]),
  '$': (56, [('R', 14, 0, 48, 12), ('R', 14, 0, 26, 40), ('R', 14, 34, 48, 46),
@@ -705,9 +752,39 @@ def _thicken_prim(p):
         return ('D', cx, cy, max(r, 9))
     return p
 
-SERIF_BOLD = {ch: (adv, [_thicken_prim(p) for p in prims])
+SERIF_BOLD_PUNCT = {
+ # Round 14: punctuation is EXEMPT from _thicken_prim — the generic rule
+ # fattens every line to 19 u, which merged the two strokes of '"' into
+ # one solid blob and turned "'" into a wedge as wide as a letter stem
+ # (the duel judge read both as broken in every round). These are
+ # hand-drawn bold punctuation: dots stay dots, quote strokes stay thin
+ # (10 u) and separated, the ';' tail stays thin so it cannot swallow
+ # its lower dot. Letters are untouched.
+ ',': (34, [('D', 30, 95, 10), ('L', 30, 99, 21, 117, 11)]),
+ ';': (34, [('D', 30, 42, 10), ('D', 30, 92, 10), ('L', 30, 97, 21, 115, 11)]),
+ "'": (30, [('D', 27, 9, 9), ('L', 27, 13, 19, 30, 10)]),
+ '’': (30, [('D', 27, 9, 9), ('L', 27, 13, 19, 30, 10)]),
+ '"': (52, [('D', 12, 9, 9), ('L', 12, 13, 4, 30, 10),
+            ('D', 40, 9, 9), ('L', 40, 13, 32, 30, 10)]),
+ '‘': (30, [('D', 27, 9, 9), ('L', 27, 13, 35, 30, 10)]),
+ '“': (52, [('D', 12, 9, 9), ('L', 12, 13, 20, 30, 10),
+            ('D', 40, 9, 9), ('L', 40, 13, 48, 30, 10)]),
+ '”': (52, [('D', 12, 9, 9), ('L', 12, 11, 4, 30, 10),
+            ('D', 40, 9, 9), ('L', 40, 11, 32, 30, 10)]),
+}
+
+SERIF_BOLD = {ch: (SERIF_BOLD_PUNCT[ch] if ch in SERIF_BOLD_PUNCT else
+                   (adv, [_thicken_prim(p) for p in prims]))
               for ch, (adv, prims) in SERIF.items()}
 SERIF_BOLD_F = (SERIF_BOLD, SERIF_CELL, SERIF_BASE)
+
+_PUNCT_AIR = set(";:'\",.!?\u2018\u2019\u201c\u201d")
+
+def _side_bearing(ch, size):
+    # Round 14: punctuation gets more air than letters (5.5% vs 3% of
+    # size), so a 2-3 px mark cannot crowd the neighbouring letter — the
+    # judge read ';' as part of the following word. Letters unchanged.
+    return size * 0.055 if ch in _PUNCT_AIR else size * 0.03
 
 _OPT_CACHE = {}
 
@@ -731,7 +808,7 @@ def _glyph_optics(font, ch, size):
         res = (None, None, adv)
     else:
         cmin, cmax = min(cols), max(cols)
-        lb = size * 0.03
+        lb = _side_bearing(ch, size)
         res = (cmin, cmax, (cmax - cmin + 1) + 2.0 * lb)
     _OPT_CACHE[key] = res
     return res
@@ -757,7 +834,7 @@ def draw_text(cv, x, y, text, font, size, col, align='l', slant=0.0, track=0.0):
         mask, mw, mh, fx0, fy0, adv = _render_glyph(d, 0, base, ch, size)
         cmin, cmax, oadv = _glyph_optics(font, ch, size)
         if mw and mh and cmin is not None:
-            lb = size * 0.03
+            lb = _side_bearing(ch, size)
             ox = int(round(pen + lb)) - cmin
             oy = base_y - int(round(base * s)) + fy0
             for my in range(mh):
@@ -1296,45 +1373,6 @@ def scene_beijing(cv, x, y, w, h):
         cv.disc(tx, int(base - 20 * u), max(4, int(6 * u)), (40, 120, 60))
     cv.rect(x, base, x + w, base + int(4 * u), (120, 100, 70))
 
-def scene_davao(cv, x, y, w, h):
-    _vgrad(cv, x, y, w, h, (172, 210, 234), (214, 232, 240))
-    _speckle(cv, x, y, w, int(h * 0.4), 51, (255, 255, 255), 8, 1)
-    cv.rect(x, y + h - 10, x + w, y + h - 6, (90, 90, 90))
-    for px in range(x + 6, x + w - 6, 18):
-        cv.rect(px, y + h - 9, px + 8, y + h - 7, (255, 255, 255))
-    # clouds + control tower
-    ellipse(cv, x + 150, y + 12, 16, 5, (255, 255, 255))
-    ellipse(cv, x + 52, y + 8, 12, 4, (255, 255, 255))
-    cv.rect(x + w - 26, y + h - 34, x + w - 18, y + h - 10, (120, 120, 120))
-    cv.disc(x + w - 22, y + h - 36, 4, (90, 90, 90))
-    # plane side view (py raised: the tail fins poked 4 px above the
-    # scene, onto the kicker strip, at h=44 in the r11 first render)
-    px, py = x + 22, y + h // 2
-    cv.rect(px, py - 6, px + 110, py + 6, (240, 240, 240))
-    cv.poly([(px + 110, py - 6), (px + 138, py - 1), (px + 110, py + 6)], (220, 220, 220))
-    cv.poly([(px + 6, py - 6), (px + 22, py - 22), (px + 34, py - 6)], (200, 40, 40))
-    cv.poly([(px + 70, py + 6), (px + 92, py + 18), (px + 102, py + 6)], (180, 180, 180))
-    cv.poly([(px + 96, py - 6), (px + 116, py - 20), (px + 124, py - 6)], (200, 40, 40))
-    for wx in range(px + 12, px + 104, 14):
-        cv.rect(wx, py - 3, wx + 6, py + 1, (29, 78, 216))
-    # fire glow at the tail (the story: jet lands after fire)
-    cv.disc(px + 10, py - 2, 8, (255, 140, 40))
-    cv.disc(px + 14, py - 4, 5, (255, 220, 90))
-
-def scene_canberra(cv, x, y, w, h):
-    # AI circle kept small and centred: clear margin to the label below
-    _vgrad(cv, x, y, w, h, (222, 233, 242), (238, 243, 248))
-    cx, cy = x + w // 2, y + h // 2
-    cv.disc(cx, cy, 25, (190, 220, 225))
-    cv.disc(cx, cy, 22, TEAL)
-    cv.ring(cx, cy, 22, 19, (255, 255, 255))
-    for dx, dy in ((-8, -6), (8, -6), (-8, 8), (8, 8)):
-        cv.disc(cx + dx, cy + dy, 3, (255, 255, 255))
-    cv.line(cx - 8, cy - 6, cx + 8, cy + 8, (255, 255, 255), 2)
-    cv.line(cx + 8, cy - 6, cx - 8, cy + 8, (255, 255, 255), 2)
-    cv.disc(cx - 30, cy - 14, 3, (29, 78, 216))
-    cv.disc(cx + 30, cy + 14, 3, (185, 28, 28))
-
 def scene_bitcoin(cv, x, y, w, h):
     _vgrad(cv, x, y, w, h, (16, 18, 26), (32, 36, 52))
     for gx in range(x + 30, x + w - 10, 30):
@@ -1438,31 +1476,6 @@ def scene_gaza(cv, x, y, w, h):
     for rx in (x + 100, x + 140, x + 170):
         cv.rect(rx, base - 4, rx + 12, base, (110, 85, 65))
 
-def scene_geneva(cv, x, y, w, h):
-    # UN palais facade: columns, a row of flags, and a table with
-    # name placards — the talks continue.
-    _vgrad(cv, x, y, w, h, (198, 208, 220), (228, 233, 240))
-    base = y + h
-    # facade: entablature + columns
-    cv.rect(x + 20, y + 8, x + w - 20, y + 16, (120, 130, 140))
-    for i in range(5):
-        px = x + 28 + i * 32
-        cv.rect(px, y + 16, px + 8, base - 12, (200, 205, 210))
-        cv.rect(px - 2, y + 14, px + 10, y + 17, (220, 224, 228))
-    cv.rect(x + 20, base - 14, x + w - 20, base - 12, (120, 130, 140))
-    # flag row on the entablature
-    for j, fc in enumerate(((185, 28, 28), (29, 78, 216), (21, 128, 61),
-                            (220, 160, 40), (126, 34, 206))):
-        fx = x + 34 + j * 30
-        cv.line(fx, y + 2, fx, y + 8, INK, 1)
-        cv.rect(fx, y + 2, fx + 10, y + 7, fc)
-    # table with placards + delegates
-    cv.rect(x + 30, base - 12, x + w - 30, base - 4, (146, 118, 84))
-    for j, pc in enumerate(((185, 28, 28), (29, 78, 216), (21, 128, 61))):
-        cv.rect(x + 44 + j * 48, base - 10, x + 54 + j * 48, base - 5, pc)
-    for dx in (x + 52, x + 100, x + 148):
-        cv.disc(dx, base - 16, 4, (60, 60, 60))
-
 def scene_mexico(cv, x, y, w, h):
     # Desert arrest at dusk: mesas, a helicopter with a searchlight
     # cone sweeping the ground, and a cactus.
@@ -1518,19 +1531,22 @@ MAP_LAND = [  # (lon, lat, rx, ry) ellipses, degrees
 ]
 
 def draw_map(cv, x, y, w, h):
-    _vgrad(cv, x, y, w, h, (200, 224, 236), (222, 236, 242))
+    # Round 14: slightly darker — the map was 1.5% dark pixels at full
+    # size (Warden r13: 4.4% at ~300 px); land now uses the existing
+    # LAND_DK tan, ocean and graticule a touch deeper. Pins unchanged.
+    _vgrad(cv, x, y, w, h, (186, 212, 228), (212, 228, 240))
     def px(lon, lat):
         return x + (lon + 168.0) / 360.0 * w, y + (78.0 - lat) / 136.0 * h
     for lon, lat, rx, ry in MAP_LAND:
         cx, cy = px(lon, lat)
-        ellipse(cv, cx, cy, rx / 360.0 * w, ry / 136.0 * h, LAND)
+        ellipse(cv, cx, cy, rx / 360.0 * w, ry / 136.0 * h, LAND_DK)
     # graticule
     for lon in (-120, -60, 0, 60, 120):
         gx, _ = px(lon, 0)
-        cv.vline(int(gx), y, y + h, (190, 210, 220), 1)
+        cv.vline(int(gx), y, y + h, (174, 198, 212), 1)
     for lat in (40, 0, -40):
         _, gy = px(0, lat)
-        cv.hline(x, x + w, int(gy), (190, 210, 220), 1)
+        cv.hline(x, x + w, int(gy), (174, 198, 212), 1)
     # Pins are 8 px radius (round 12: bigger, for the ~300 px test): at
     # this map scale Kyiv/Kryvyi Rih (200 km apart) and Bahrain/Hormuz/
     # Riyadh (400-500 km) share one dot, so a colliding pin's number is
@@ -1565,7 +1581,7 @@ HEROES = [
          place="BAHRAIN, HORMUZ",
          status="CONFIRMED", sources="AFP, UKMTO",
          title="Iran strikes Bahrain as tankers hit in Hormuz",
-         summary="Bahrain says Iran hit a civilian plant; fire, no one hurt. "
+         summary="Bahrain says Iran hit a civilian plant, fire, no one hurt. "
                  "Two tankers struck off Khasab. (AFP, UKMTO)",
          scene=scene_bahrain),
     dict(no=2, kicker="COP31: OVERTIME", region="Europe", topic="CLIMATE",
@@ -1579,8 +1595,8 @@ HEROES = [
          place="JUNIN, PERU",
          status="CONFIRMED", sources="USGS, IGP",
          title="M6.7 quake shakes Peru, 8 hurt",
-         summary="108 km deep; 8 hurt, 128 homes hit. "
-                 "Felt in Lima; no tsunami. (USGS, IGP)",
+         summary="108 km deep, 8 hurt, 128 homes hit. "
+                 "Felt in Lima, no tsunami. (USGS, IGP)",
          scene=scene_peru),
 ]
 # Round 13: 12 medium cards (3 rows x 4). Davao, Canberra and Geneva
@@ -1597,17 +1613,17 @@ MEDIUM = [
     dict(no=5, kicker="5 KRYVYI RIH \u2014 WAR", region="Europe",
          status="REPORTED", sources="AP", pill="60 HURT",
          title="Strike kills 2 and injures 60",
-         summary="Double-tap strike kills 2, injures 60; homes ablaze. (AP)",
+         summary="Double-tap strike kills 2, injures 60, homes ablaze. (AP)",
          scene=scene_kryvyi),
     dict(no=6, kicker="6 HORMUZ \u2014 WAR", region="Middle East",
          status="REPORTED", sources="IRIB", pill="58TH MQ-9",
          title="Iran downs US drone",
-         summary="IRGC claims a 58th MQ-9 downed; US unconfirmed. (IRIB)",
+         summary="IRGC claims a 58th MQ-9 downed, US unconfirmed. (IRIB)",
          scene=scene_hormuz),
     dict(no=7, kicker="7 TEHRAN \u2014 DIPLOMACY", region="Middle East",
          status="OFFICIAL", sources="IRNA", pill="RED LINE",
          title="Tehran: uranium stays at home",
-         summary="Araghchi: the material stays; seeks a fair solution. (IRNA)",
+         summary="Araghchi: the material stays, seeks a fair solution. (IRNA)",
          scene=scene_tehran),
     dict(no=8, kicker="8 WASHINGTON \u2014 TECHNOLOGY", region="Americas",
          status="REPORTED", sources="REUTERS", pill="TAX VOWED",
@@ -1622,12 +1638,12 @@ MEDIUM = [
     dict(no=10, kicker="10 RIYADH \u2014 WAR", region="Middle East",
          status="CONFIRMED", sources="REUTERS, AFP", pill="3 SHOT DOWN",
          title="Saudi downs 3 missiles over Riyadh",
-         summary="Shot down before dawn; no casualties. (REUTERS, AFP)",
+         summary="Shot down before dawn, no casualties. (REUTERS, AFP)",
          scene=scene_riyadh),
     dict(no=11, kicker="11 WORLD \u2014 MARKETS", region="Global",
          status="CONFIRMED", sources="COINGECKO", pill="$58,960",
          title="Bitcoin below $59k",
-         summary="Down 4.8% in a day; lowest since September 2024. (COINGECKO)",
+         summary="Down 4.8% in a day, lowest since September 2024. (COINGECKO)",
          scene=scene_bitcoin),
     dict(no=12, kicker="12 LAS VEGAS \u2014 FORMULA 1", region="Americas",
          status="OFFICIAL", sources="FORMULA 1", pill="1:34.151",
@@ -1638,7 +1654,7 @@ MEDIUM = [
     dict(no=13, kicker="13 WELLINGTON \u2014 CRICKET", region="Oceania",
          status="CONFIRMED", sources="AFP", pill="124*",
          title="Rahul ton lifts India",
-         summary="Rahul 124* at tea, day three; India 344 for 2. (AFP)",
+         summary="Rahul 124* at tea, day three, India 344 for 2. (AFP)",
          scene=scene_cricket),
     dict(no=14, kicker="14 GAZA \u2014 WAR", region="Middle East",
          status="REPORTED", sources="AP", pill="4 KILLED",
@@ -1687,7 +1703,7 @@ ALSO_ON = [
     (40, "Taipei: budget and cash payout are passed", "Taipei Times"),
     (41, "Melbourne: Cummins keeps Australian captaincy", "ABC"),
     (42, "Paris: French police sentenced over Zecler beating", "AP"),
-    (43, "Davao: jet lands safe after fire; 146 aboard", "AP"),
+    (43, "Davao: jet lands safe after fire, 146 aboard", "AP"),
     (44, "Canberra: Australia, China agree AI talks", "ABC"),
     (45, "Geneva: UN talks go on over AI weapons", "AP"),
 ]
@@ -1899,6 +1915,11 @@ def build():
     # ---- map + ALSO ON (2 columns of 15; round 12: 11 px type, 12.9 px
     # leading, bigger map — the bottom third must survive ~300 px;
     # round 13: geometry UNCHANGED, 30 briefs again, renumbered 16-45)
+    # Round 14: number offset 19 -> 17 and src gap 4 -> 2 — the wider
+    # r14 punctuation plus mixed-case serif srcs (SANS has no lowercase,
+    # so the old SANS credits printed mostly blank) made the longest row
+    # (#37, "The Nation") overshoot the right margin by ~2 px; these two
+    # 2 px trims bring it back inside with no copy change.
     y0, y1 = 742, 946
     draw_text(cv, MX, y0 + 11, "WHERE IT HAPPENED", SANS_F, 11, RED)
     draw_text(cv, MX + int(text_width("WHERE IT HAPPENED", SANS_F, 11)) + 8,
@@ -1918,12 +1939,12 @@ def build():
         draw_text(cv, bx, by + 9, str(no), SANS_F, 11, RED)
         lead, sep, rest = txt.partition(":")
         lead = lead + ":" if sep else lead
-        lx = bx + 19
+        lx = bx + 17  # round 14: 19 -> 17 (see src gap below)
         draw_text(cv, lx, by + 9, lead, SERIF_BOLD_F, 11, INK)
         rx = lx + int(text_width(lead, SERIF_BOLD_F, 11))
         draw_text(cv, rx, by + 9, rest, SERIF_F, 11, INK)
-        sx = rx + int(text_width(rest, SERIF_F, 11)) + 4
-        draw_text(cv, sx, by + 9, "(%s)" % src, SANS_F, 9, GREY)
+        sx = rx + int(text_width(rest, SERIF_F, 11)) + 2  # round 14: gap 4 -> 2
+        draw_text(cv, sx, by + 9, "(%s)" % src, SERIF_F, 9, GREY)
     cv.hline(MX, W - MX, y1, RULE, 2)
     # ---- DATE CHECK (round 11: #9's red-framed strip, white inside)
     y0, y1 = 948, 984
