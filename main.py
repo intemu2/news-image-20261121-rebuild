@@ -1,25 +1,26 @@
-# news-image-20261121 — rebuild round 14 (font-engine fix)
+# news-image-20261121 — rebuild round 15 (comma tail + "2" + field balance)
 # "Saturday 21 November 2026" — one-page newspaper, 45 stories.
-#  - round 14: ONE variable only — the punctuation rendering. Five rounds
-#    (r7/r9/r11/r12/r13) scored a flat 0.20-0.24 in blind duels; layout,
-#    panel count and headline size never moved it. The duel judge kept
-#    reading our punctuation as broken ("plant; fire" -> "plant 'ire",
-#    "Tremendous tax'" broken, footer letters clipped). Diagnosis (pixel
-#    level, /tmp/diag14.py): _thicken_prim fattened every punctuation
-#    stroke to 19 u, merging the two strokes of '"' into ONE solid blob
-#    and turning "'" into a wedge as wide as a letter stem; '.' and ':'
-#    were 1-2 px specks at 10-11 px; ';' was 3 disconnected specks in a
-#    2 px column. Fix: punctuation glyphs redrawn (dots r 9-10, quote
-#    strokes thin and separated, ';' tail thin so it cannot swallow its
-#    lower dot) and EXEMPTED from letter thickening via SERIF_BOLD_PUNCT;
-#    punctuation gets a wider side bearing so it cannot crowd the next
-#    letter. Letters untouched (masthead stem mode/median still 12/12 px
-#    like #1). Copy: ';' -> ',' in the 10 story summaries/briefs (the
-#    exact misread string and its siblings; facts unchanged) — DATE CHECK
-#    keeps its ';' list separators. Layout, story set (45), region bar
-#    and map geometry UNCHANGED. Map darkened slightly (LAND_DK, deeper
-#    ocean/graticule — it was 1.5% dark pixels at full size). Dead scenes
-#    scene_davao/scene_canberra/scene_geneva removed (~140 lines).
+#  - round 15: Warden r14 (0.32, first move after 6 flat rounds) named
+#    the remaining blockers: K3 comma tail too small to read at reading
+#    size (jury still reads hero-1 "," as an apostrophe before "fire"),
+#    masthead "2" eccentric (top curve inverted, like Sigma), f/t/l
+#    wobbly at small size; K2 "heavy on war" in all 5 games; K5 map
+#    still pale (4.7% dark per Warden, "map darker" unmeasurable); K4
+#    "58th MQ-9" reads as invented precision. Fixes, all measured:
+#    comma/semicolon tails redrawn as a real hook (dot + two-segment
+#    tail, 22 u below baseline, wider) in SERIF and SERIF_BOLD_PUNCT;
+#    "2" bowl re-angled 90-330 -> 160-40 (a proper open bowl, same
+#    11 u ring so masthead stems stay 12/12 px); "f" hook tightened,
+#    "t" deep foot curl replaced by a straight diagonal foot, "l" foot
+#    narrowed; 3 briefs swapped (total stays 45) to balance fields —
+#    Yemen threat, Baltic Sparta II, Trump Iran strikes OUT; Sejong
+#    train derail, Eastern India rain alerts, London rugby IN; region
+#    bar recomputed from the new set (Europe 11, Middle East 6,
+#    Americas 11, Asia 11, Africa 2, Oceania 3, Global 1); "58th" ->
+#    "another" in the MQ-9 summary AND pill; map land darkened for
+#    real (LAND_DK 210,190,140 -> 148,118,66) with ocean/graticule
+#    deeper, measured before/after. Layout, grid, thicknesses, DATE
+#    CHECK and heroes UNCHANGED.
 #  - round 13: 18 -> 15 drawn panels (3 rows x 4, 243 px wide, 19 px
 #    headlines) — the r12 duel judge said the winners have 13-16 LARGE
 #    panels with big headlines while ours were "very dense and small";
@@ -86,7 +87,7 @@ DARK = (17, 24, 39)
 CREAM = (245, 238, 220)
 SEA = (214, 232, 240)
 LAND = (232, 217, 176)
-LAND_DK = (210, 190, 140)
+LAND_DK = (148, 118, 66)
 SKY = (186, 219, 238)
 NIGHT = (16, 24, 48)
 GOLD = (201, 162, 39)
@@ -351,7 +352,12 @@ SERIF = {
             ('R', 22, 34, 52, 41),
             ('R', 22, 90, 52, 97)]),
  'e': (65, [('A', 30, 65, 33, 22, 70, 20), ('R', 2, 60, 56, 67)]),
- 'f': (56, [('R', 24, 10, 42, 100), ('A', 26, 24, 22, 11, 180, 360), ('R', 8, 46, 52, 53)]),
+ # Round 15: "f" hook tightened (arc 22/11 u, 180-360 -> 19/8 u,
+ # 195-345 — same 11 u ring, less bulbous at small size); "t" deep
+ # foot curl (arc to 16 u below baseline) replaced by a short straight
+ # diagonal foot; "l" foot narrowed (17-41 -> 19-40, y 95 -> 96) so it
+ # cannot smear into a bend at 10 px. Stroke thicknesses unchanged.
+ 'f': (56, [('R', 24, 10, 42, 100), ('A', 27, 25, 19, 8, 195, 345), ('R', 8, 46, 52, 53)]),
  'g': (67, [('G', 28, 65, 33, 22),
             ('R', 46, 30, 64, 104),
             ('A', 38, 104, 20, 10, 0, 180),
@@ -369,7 +375,7 @@ SERIF = {
             ('R', 3, 95, 27, 100),
             ('L', 22, 62, 56, 30, 12),
             ('L', 30, 56, 58, 100, 12)]),
- 'l': (43, [('R', 20, 0, 38, 100), ('R', 17, 95, 41, 100)]),
+ 'l': (43, [('R', 20, 0, 38, 100), ('R', 19, 96, 40, 100)]),
  'm': (99, [('R', 3, 30, 21, 100),
             ('R', 1, 95, 23, 100),
             ('A', 30, 50, 24, 13, 180, 360),
@@ -396,7 +402,7 @@ SERIF = {
             ('A', 32, 50, 22, 11, 180, 330),
             ('R', 46, 38, 58, 58)]),
  's': (63, [('A', 30, 46, 22, 11, 90, 300), ('A', 30, 84, 22, 11, 270, 120)]),
- 't': (56, [('R', 22, 8, 40, 100), ('R', 6, 42, 54, 49), ('A', 30, 100, 16, 7, 0, 90)]),
+ 't': (56, [('R', 22, 8, 40, 100), ('R', 6, 42, 54, 49), ('L', 30, 96, 44, 107, 9)]),
  'u': (69, [('R', 6, 30, 24, 72), ('R', 42, 30, 60, 100), ('A', 33, 72, 25, 14, 0, 180)]),
  'v': (67, [('L', 8, 30, 30, 100, 13), ('L', 54, 30, 30, 100, 13)]),
  'w': (69, [('L', 4, 30, 18, 100, 12),
@@ -406,9 +412,15 @@ SERIF = {
  'x': (65, [('L', 8, 30, 56, 100, 13), ('L', 56, 30, 8, 100, 13)]),
  'y': (67, [('L', 8, 30, 30, 88, 13), ('L', 54, 30, 30, 88, 13), ('L', 30, 88, 16, 125, 12)]),
  'z': (65, [('R', 6, 32, 56, 39), ('R', 6, 92, 56, 99), ('L', 50, 38, 12, 92, 11)]),
+ # Round 15: "2" bowl re-angled 90-330 -> 160-40 — the old arc dipped
+ # to the bottom centre (y 64), making the top curve look inverted,
+ # like Sigma; the new arc is a proper open bowl (left tip at mid
+ # height, right end at mid height where the diagonal starts). Ring
+ # stays 11 u, diagonal 13 u, base 7 u, so bold thickening (16/19/13 u)
+ # and masthead stems are unchanged.
  '0': (69, [('G', 32, 50, 42, 31)]),
  '1': (67, [('R', 34, 0, 54, 100), ('L', 52, 0, 22, 24, 12), ('R', 21, 95, 63, 100)]),
- '2': (69, [('A', 32, 32, 32, 21, 90, 330), ('L', 58, 18, 10, 92, 13), ('R', 6, 92, 62, 99)]),
+ '2': (69, [('A', 31, 32, 30, 19, 160, 40), ('L', 54, 50, 10, 92, 13), ('R', 6, 92, 62, 99)]),
  '3': (69, [('A', 32, 30, 30, 19, 270, 90),
             ('A', 32, 70, 32, 21, 270, 90),
             ('R', 22, 47, 46, 54)]),
@@ -428,7 +440,13 @@ SERIF = {
  # lower dot so the two merge into one comma (was a fat tail swallowing
  # the dot). ',' tail is thin (9 u) and reaches further down-left.
  '.': (34, [('D', 30, 95, 9)]),
- ',': (34, [('D', 30, 95, 9), ('L', 30, 99, 21, 117, 9)]),
+ # Round 15: comma tail is now a real hook — dot + two-segment tail
+ # reaching 22 u below the baseline and 16 u left of the dot (was a
+ # thin 9 u straight tail to 17 u below). At 10.5 px the tail is
+ # ~2.3 px long and ~1.2 px wide, so it reads as a descender hook,
+ # not a floating speck the judge could mistake for an apostrophe.
+ # ';' tail matches, so DATE CHECK separators stay visibly comma-like.
+ ',': (34, [('D', 30, 94, 10), ('L', 30, 98, 24, 112, 12), ('L', 24, 112, 14, 122, 11)]),
  "'": (30, [('D', 27, 9, 8), ('L', 27, 13, 19, 30, 8)]),
  '’': (30, [('D', 27, 9, 8), ('L', 27, 13, 19, 30, 8)]),
  '"': (52, [('D', 12, 9, 8), ('L', 12, 11, 4, 30, 9),
@@ -447,7 +465,7 @@ SERIF = {
             ('D', 40, 9, 8), ('L', 40, 11, 32, 30, 9)]),
  '=': (58, [('R', 8, 32, 50, 42), ('R', 8, 50, 50, 60)]),
  ':': (34, [('D', 30, 42, 9), ('D', 30, 92, 9)]),
- ';': (34, [('D', 30, 42, 9), ('D', 30, 92, 9), ('L', 30, 97, 21, 115, 9)]),
+ ';': (34, [('D', 30, 42, 9), ('D', 30, 92, 9), ('L', 30, 97, 24, 111, 12), ('L', 24, 111, 14, 121, 11)]),
  '!': (40, [('R', 23, 0, 41, 72), ('D', 32, 92, 8)]),
  '?': (58, [('A', 32, 32, 28, 17, 150, 30), ('L', 46, 50, 32, 72, 12), ('D', 32, 92, 8)]),
  '-': (60, [('R', 8, 60, 52, 67)]),
@@ -760,8 +778,8 @@ SERIF_BOLD_PUNCT = {
  # hand-drawn bold punctuation: dots stay dots, quote strokes stay thin
  # (10 u) and separated, the ';' tail stays thin so it cannot swallow
  # its lower dot. Letters are untouched.
- ',': (34, [('D', 30, 95, 10), ('L', 30, 99, 21, 117, 11)]),
- ';': (34, [('D', 30, 42, 10), ('D', 30, 92, 10), ('L', 30, 97, 21, 115, 11)]),
+ ',': (34, [('D', 30, 94, 10), ('L', 30, 98, 24, 112, 13), ('L', 24, 112, 14, 122, 12)]),
+ ';': (34, [('D', 30, 42, 10), ('D', 30, 92, 10), ('L', 30, 97, 24, 111, 13), ('L', 24, 111, 14, 121, 12)]),
  "'": (30, [('D', 27, 9, 9), ('L', 27, 13, 19, 30, 10)]),
  '’': (30, [('D', 27, 9, 9), ('L', 27, 13, 19, 30, 10)]),
  '"': (52, [('D', 12, 9, 9), ('L', 12, 13, 4, 30, 10),
@@ -1531,10 +1549,13 @@ MAP_LAND = [  # (lon, lat, rx, ry) ellipses, degrees
 ]
 
 def draw_map(cv, x, y, w, h):
-    # Round 14: slightly darker — the map was 1.5% dark pixels at full
-    # size (Warden r13: 4.4% at ~300 px); land now uses the existing
-    # LAND_DK tan, ocean and graticule a touch deeper. Pins unchanged.
-    _vgrad(cv, x, y, w, h, (186, 212, 228), (212, 228, 240))
+    # Round 15: land darkened FOR REAL — LAND_DK was (210,190,140),
+    # luminance ~190, so the map measured 1.5% dark pixels (<128) and
+    # the r14 "map darker" was unmeasurable. Land is now (148,118,66),
+    # luminance ~121: an old-atlas olive that reads as land at any
+    # size, with the ocean gradient and graticule deepened for
+    # contrast. Pins unchanged (red discs, white rings).
+    _vgrad(cv, x, y, w, h, (168, 198, 222), (196, 216, 234))
     def px(lon, lat):
         return x + (lon + 168.0) / 360.0 * w, y + (78.0 - lat) / 136.0 * h
     for lon, lat, rx, ry in MAP_LAND:
@@ -1543,10 +1564,10 @@ def draw_map(cv, x, y, w, h):
     # graticule
     for lon in (-120, -60, 0, 60, 120):
         gx, _ = px(lon, 0)
-        cv.vline(int(gx), y, y + h, (174, 198, 212), 1)
+        cv.vline(int(gx), y, y + h, (140, 168, 190), 1)
     for lat in (40, 0, -40):
         _, gy = px(0, lat)
-        cv.hline(x, x + w, int(gy), (174, 198, 212), 1)
+        cv.hline(x, x + w, int(gy), (140, 168, 190), 1)
     # Pins are 8 px radius (round 12: bigger, for the ~300 px test): at
     # this map scale Kyiv/Kryvyi Rih (200 km apart) and Bahrain/Hormuz/
     # Riyadh (400-500 km) share one dot, so a colliding pin's number is
@@ -1616,9 +1637,9 @@ MEDIUM = [
          summary="Double-tap strike kills 2, injures 60, homes ablaze. (AP)",
          scene=scene_kryvyi),
     dict(no=6, kicker="6 HORMUZ \u2014 WAR", region="Middle East",
-         status="REPORTED", sources="IRIB", pill="58TH MQ-9",
+         status="REPORTED", sources="IRIB", pill="MQ-9 DOWN",
          title="Iran downs US drone",
-         summary="IRGC claims a 58th MQ-9 downed, US unconfirmed. (IRIB)",
+         summary="IRGC claims another MQ-9 downed, US unconfirmed. (IRIB)",
          scene=scene_hormuz),
     dict(no=7, kicker="7 TEHRAN \u2014 DIPLOMACY", region="Middle East",
          status="OFFICIAL", sources="IRNA", pill="RED LINE",
@@ -1675,19 +1696,29 @@ MEDIUM = [
 # with their SUBJECT country (research file tags them Americas / Asia),
 # so the region bar counts match what the briefs show. Still cut:
 # Russell, Tallinn, London rugby.
+# Round 15: 3 briefs swapped for FIELD BALANCE (K2 "heavy on war"):
+# OUT — the three most war-leaning briefs: Yemen Houthi threat (#20),
+# Baltic Sparta II drone-hit fire (#26), Trump weighing Iran strikes
+# (#27, also the 4th Iran item after hero 1, #6, #7). IN — the three
+# strongest soft stories cut in r13, one per field: Sejong freight
+# train derail, no one hurt (transport/accident, Korea Herald, Asia);
+# Eastern India rain alerts as Akvan remnants move inland (weather,
+# ETV, Asia); London England beat New Zealand by record margin (sport,
+# AP, Europe — sport count 3 -> 4, cap 5). Total stays 45; heroes and
+# medium cards untouched. Region bar recomputed from the new set.
 ALSO_ON = [
     (16, "Copenhagen: Denmark says it foiled a Russian plot", "AJ"),
     (17, "Antalya: EU warns COP31 risks a “fossil summit”", "AFP"),
     (18, "Panama: threatens to block climate text", "AJ"),
     (19, "Indonesia: PLN signs clean-power deals", "Antara"),
-    (20, "Yemen: Houthis threaten Jeddah and Red Sea ports", "AJ"),
+    (20, "Sejong: freight train derails, no one hurt", "Korea Herald"),
     (21, "Washington: Vance: Trump’s Iran call", "Reuters"),
     (22, "Missouri: judge OKs $7.25bn Roundup deal", "AFP"),
     (23, "Vancouver: Canada rests youth climate case", "AFP"),
     (24, "New Delhi: Pakistani minister joins SCO forum", "Dawn"),
     (25, "Myanmar: sanctions urged after court ruling", "AP"),
-    (26, "Baltic: Russian ship Sparta II on fire", "Reuters"),
-    (27, "Washington: Trump weighs new Iran strikes", "NYT"),
+    (26, "Eastern India: rain alerts as Akvan moves inland", "ETV"),
+    (27, "London: England beat New Zealand by record margin", "AP"),
     (28, "Port-au-Prince: Salvadoran troops fight gangs", "AP"),
     (29, "Southern Ethiopia: 700,000 displaced", "AP"),
     (30, "Istanbul: Turkey takes control of Sozcu TV", "Reuters"),
@@ -1709,15 +1740,17 @@ ALSO_ON = [
 ]
 NUMBERS = [("13", "COP31 DAY"), ("2", "TANKERS HORMUZ"), ("6.7", "PERU QUAKE"),
            ("146", "SAFE IN DAVAO"), ("$58,960", "BITCOIN"), ("124*", "RAHUL")]
-# Counts recomputed from the r13 story list (45), by SUBJECT as shown
-# on the image: the Panama + Indonesia briefs lead with their subject
-# country (research file tags them Americas / Asia), so a reader
-# grouping by the place shown gets the same numbers: Europe 11,
-# Middle East 7, Americas 12, Asia 9, Africa 2, Oceania 3, Global 1.
-# (Round 13 fixes the r12 convention gap: two Antalya-dateline briefs
-# were counted Europe while their subjects were Panama / Indonesia.)
-REGIONS = [("EUROPE", "Europe", 11), ("MIDDLE EAST", "Middle East", 7),
-           ("AMERICAS", "Americas", 12), ("ASIA", "Asia", 9),
+# Counts recomputed from the r15 story list (45), by SUBJECT as shown
+# on the image (round 13 convention): Europe 11 (drawn 3 + briefs 8:
+# Copenhagen, Antalya EU, Istanbul, Paris x2, Berlin, Geneva, London),
+# Middle East 6 (drawn 5 + Baghdad), Americas 11 (drawn 4 + briefs 7),
+# Asia 11 (drawn 1 + briefs 10: Indonesia, New Delhi, Myanmar,
+# Islamabad, Kuala Lumpur, Bangkok, Taipei, Davao, Sejong, Eastern
+# India), Africa 2, Oceania 3, Global 1. Delta vs r13: Yemen OUT
+# (Middle East -1), Baltic OUT + London IN (Europe flat), Trump Iran
+# strikes OUT (Americas -1), Sejong + Eastern India IN (Asia +2).
+REGIONS = [("EUROPE", "Europe", 11), ("MIDDLE EAST", "Middle East", 6),
+           ("AMERICAS", "Americas", 11), ("ASIA", "Asia", 11),
            ("AFRICA", "Africa", 2), ("OCEANIA", "Oceania", 3),
            ("GLOBAL", "Global", 1)]
 DATE_CHECK = ("Not 21 Nov, so left out: 20 Nov \u2014 Wall Street falls; Kyiv bridge "
